@@ -20,10 +20,13 @@ A comprehensive asset management system for tracking and managing company assets
 AssetTrackPro is a full-stack web application designed to help organizations track and manage their physical and digital assets. The application provides an intuitive interface for asset registration, tracking, reporting, and analytics.
 
 
+
 ERD Diagram
 
 ![rfid_erd_full](https://github.com/user-attachments/assets/a3e9b068-51d9-4710-87e4-9b4fef300739)
 
+
+Use Case Diagram
 
 ![rfid_use_case_full](https://github.com/user-attachments/assets/b95281ee-6c4c-411c-a2f4-08ab24d0b276)
 
