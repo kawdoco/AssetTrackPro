@@ -35,6 +35,98 @@
 
 **AssetTrackPro** is a production-ready, enterprise-grade RFID-based real-time asset tracking system designed to monitor the physical movement of company assets (laptops, tablets, phones) as they transit through zones and gates within organizational buildings.
 
+ER Diagram
+
+![rfid_erd_full](https://github.com/user-attachments/assets/a3e9b068-51d9-4710-87e4-9b4fef300739)
+
+
+Use Case Diagram
+
+![rfid_use_case_full](https://github.com/user-attachments/assets/b95281ee-6c4c-411c-a2f4-08ab24d0b276)
+
+
+Flow Chart
+
+![rfid_flowchart_full](https://github.com/user-attachments/assets/4cb367a9-5aa6-43a9-a500-f5970bc90b2d)
+
+
+DATABASE SCHEMA (Relational, production-ready)
+
+ORGANIZATION
+organization_id (PK)
+name
+industry_type
+created_at
+
+BRANCH
+branch_id (PK)
+organization_id (FK)
+name
+city
+status
+
+BUILDING
+building_id (PK)
+branch_id (FK)
+name
+
+ZONE
+zone_id (PK)
+building_id (FK)
+zone_name
+zone_type (STORAGE, OFFICE, EXIT, SECURE)
+
+GATE
+gate_id (PK)
+zone_id (FK)
+gate_name
+direction (ENTRY, EXIT, BOTH)
+
+EMPLOYEE
+employee_id (PK)
+organization_id (FK)
+employee_code
+name
+status (ACTIVE, RESIGNED)
+
+ASSET
+asset_id (PK)
+organization_id (FK)
+asset_tag_uid (RFID EPC / UUID)
+asset_type (LAPTOP, TABLET, PHONE)
+status (ACTIVE, LOST, RECOVERED)
+last_seen_zone_id (FK)
+last_seen_time
+
+ASSET_ASSIGNMENT (history matters)
+assignment_id (PK)
+asset_id (FK)
+employee_id (FK)
+assigned_at
+returned_at (nullable)
+
+MOVEMENT_EVENT (heart of the system)
+event_id (PK)
+asset_id (FK)
+gate_id (FK)
+zone_from_id (FK)
+zone_to_id (FK)
+event_type (ENTER, EXIT)
+event_time
+trigger_source (RFID, SIMULATED)
+
+
+Append-only. Never update. Never delete.
+
+ALERT / INCIDENT
+alert_id (PK)
+asset_id (FK)
+event_id (FK)
+alert_type (UNAUTHORIZED_EXIT, OVERDUE_RETURN)
+severity
+created_at
+resolved_at
+
 Unlike traditional inventory management systems that require manual check-in/check-out, AssetTrackPro provides:
 
 ✅ **Real-time location tracking** via RFID gates  
