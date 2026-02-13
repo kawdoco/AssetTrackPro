@@ -21,7 +21,7 @@ AssetTrackPro is a full-stack web application designed to help organizations tra
 
 
 
-ERD Diagram
+ER Diagram
 
 ![rfid_erd_full](https://github.com/user-attachments/assets/a3e9b068-51d9-4710-87e4-9b4fef300739)
 
