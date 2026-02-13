@@ -914,7 +914,7 @@ For questions, support, or contributions:
 
 ---
 
-## 🎓 For Lecturers
+## 🎓 Further Information
 
 This project demonstrates:
 
