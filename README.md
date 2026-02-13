@@ -367,5 +367,5 @@ For questions or support, please contact the development team.
 **Happy Coding! 🚀**
 
 
-![rfid_erd_full](https://github.com/user-attachments/assets/a3e9b068-51d9-4710-87e4-9b4fef300739)
+
 
