@@ -21,6 +21,10 @@ AssetTrackPro is a full-stack web application designed to help organizations tra
 
 ![rfid_erd_full](https://github.com/user-attachments/assets/a3e9b068-51d9-4710-87e4-9b4fef300739)
 
+
+![rfid_use_case_full](https://github.com/user-attachments/assets/b95281ee-6c4c-411c-a2f4-08ab24d0b276)
+
+
 ## ✨ Features
 
 - **Asset Management**: Create, read, update, and delete asset records
