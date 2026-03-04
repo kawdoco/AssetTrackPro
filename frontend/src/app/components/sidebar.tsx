@@ -1,6 +1,5 @@
-import React from 'react';
 import { LayoutDashboard, Package, Users, Building2, Bell, FileText, Settings, ChevronRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import logo from "../../assets/logo.png";
 
 interface SidebarProps {
   activeTab: string;
@@ -23,15 +22,16 @@ export const Sidebar = ({ activeTab, setActiveTab }: SidebarProps) => {
       <div className="p-6 flex flex-col h-full">
         {/* Logo */}
         <div className="flex items-center gap-3 mb-10 px-2">
-          <div className="w-8 h-8 bg-[#248AFF] rounded-lg flex items-center justify-center">
-            <div className="w-4 h-4 border-2 border-white rounded-full"></div>
-          </div>
-          <span className="font-bold text-lg tracking-tight">
+          <img
+          src={logo}
+          alt="TrackPro"
+          className="w-8 h-8 rounded-lg object-contain"
+          />
+            <span className="font-bold text-lg tracking-tight">
             <span className="text-[#395A8F]">Track</span>
-            <span className="text-[#248AFF]">Pro</span>
-          </span>
-        </div>
-
+          <span className="text-[#248AFF]">Pro</span>
+        </span>
+      </div>
         {/* Navigation items */}
         <nav className="flex-1 flex flex-col space-y-1">
           {navItems.map((item) => {
