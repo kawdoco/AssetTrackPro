@@ -23,13 +23,13 @@ const FeatureIcon: React.FC<FeatureIconProps> = ({ icon, label, sublabel }) => (
 
 export const BrandPanel: React.FC = () => {
   return (
-    <div className="w-full h-full p-3">
+    <div className="w-[745px] h-full p-5 pl-5">
       <div className="relative w-full h-full overflow-hidden rounded-2xl">
         {/* Background image */}
         <img
           src={forklift}
           alt="Forklift / Warehouse"
-          className="absolute inset-0 w-full h-full object-cover scale-105"
+          className="absolute inset-0 w-full h-full object-cover"
         />
 
         {/* Softer blue overlay */}
@@ -46,7 +46,7 @@ export const BrandPanel: React.FC = () => {
 
         <div className="relative z-10 flex flex-col h-full p-10">
 
-          {/* TOP — Logo stays here */}
+          {/* TOP — Logo */}
           <div className="flex items-center gap-3">
             <img
               src={logo}
@@ -64,7 +64,7 @@ export const BrandPanel: React.FC = () => {
             </div>
           </div>
 
-          {/* MIDDLE — Headline vertically centered in remaining space */}
+          {/* MIDDLE — Headline centered */}
           <div className="flex-1 flex items-center">
             <h1 className="font-black leading-[1.15]">
               <span className="block text-white text-5xl">Visibility,</span>

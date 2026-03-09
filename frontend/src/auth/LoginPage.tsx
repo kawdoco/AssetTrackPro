@@ -8,7 +8,8 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
   return (
-    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-2">
+    
+    <div className="min-h-screen w-full grid grid-cols-1 lg:grid-cols-[2fr_1.8fr] pl-8">
       <div className="hidden lg:block">
         <BrandPanel />
       </div>

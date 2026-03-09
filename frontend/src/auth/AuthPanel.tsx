@@ -23,7 +23,7 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onLogin }) => {
 
         {/* Form */}
         <form
-          className="space-y-6"
+          className="space-y-8"
           onSubmit={(e) => {
             e.preventDefault();
             // ✅ For now: go to dashboard on click (no validation)
