@@ -97,15 +97,6 @@ export const AuthPanel: React.FC<AuthPanelProps> = ({ onLogin }) => {
             Login to Console
           </button>
         </form>
-
-        {/* Footer info */}
-        <div className="mt-12 pt-8 border-t border-slate-100 flex justify-between text-[10px] uppercase tracking-widest text-slate-400 font-bold">
-          <span>v1.0-Testing</span>
-          <span className="flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            Terminal Online
-          </span>
-        </div>
       </div>
     </div>
   );
