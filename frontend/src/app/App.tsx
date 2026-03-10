@@ -17,7 +17,7 @@ import { OrganizationManagement } from "./components/OrganizationManagement";
 
 import { Package, Truck, AlertCircle, RefreshCw } from "lucide-react";
 
-import { LoginPage } from "../auth/LoginPage";
+import LoginPage from "../auth/LoginPage";
 
 type ModalType = "asset" | "employee" | "event";
 
@@ -44,7 +44,7 @@ export default function App() {
     type: "asset",
   });
 
-  // ✅ Show login page until logged in
+  // Show login page until authenticated
   if (!isAuthed) {
     return <LoginPage onLogin={() => setIsAuthed(true)} />;
   }
@@ -149,8 +149,8 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={() => {
-          setIsAuthed(false);       // ✅ goes back to login screen
-          setActiveTab("dashboard"); // optional reset
+          setIsAuthed(false);
+          setActiveTab("dashboard");
         }}
       />
 
