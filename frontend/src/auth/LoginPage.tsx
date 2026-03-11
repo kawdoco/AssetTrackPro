@@ -8,8 +8,6 @@ import logo from '../assets/logo.png';
 import rfidBg from '../assets/Supply.jpg';
 import ForgotPasswordPage from './Forgotpasswordpage';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type Role = 'super_admin' | 'org_admin' | 'security_officer';
 
 interface RoleConfig {
@@ -151,9 +149,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe]     = useState(false);
   const [isLoading, setIsLoading]       = useState(false);
-  const [resetEmail, setResetEmail]     = useState('');
-  const [resetSent, setResetSent]       = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
 
   const selectedRole = role ? ROLES[role] : null;
   const accent       = selectedRole?.accent ?? '#2563EB';
@@ -174,11 +169,20 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
     setTimeout(() => { setIsLoading(false); onLogin(); }, 1200);
   };
 
-  const handleReset = (e: React.FormEvent) => {
-    e.preventDefault();
-    setResetLoading(true);
-    setTimeout(() => { setResetLoading(false); setResetSent(true); }, 1000);
-  };
+  // ── Forgot password renders as right panel swap, left panel stays ─────────
+  if (step === 'forgot') {
+    return (
+      <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: bg }}>
+        <LeftPanel accent={accent} />
+        <div className="flex flex-1 flex-col items-center justify-center px-10 py-8 overflow-y-auto" style={{ backgroundColor: bg }}>
+          <ForgotPasswordPage
+            accent={accent}
+            onBack={() => setStep('login')}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden font-sans" style={{ backgroundColor: bg }}>
@@ -360,7 +364,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                       </label>
                       <button
                         type="button"
-                        onClick={() => { setStep('forgot'); setResetSent(false); setResetEmail(''); }}
+                        onClick={() => setStep('forgot')}
                         className="text-[13px] font-semibold hover:underline"
                         style={{ color: accent }}
                       >
@@ -396,113 +400,6 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                     <Shield className="w-3.5 h-3.5" />
                     Secured with 256-bit TLS encryption
                   </div>
-
-                  <Footer textSec={textSec} />
-                </div>
-              </motion.div>
-            )}
-
-            {/* ── STEP 3: Forgot Password ─────────────────────────────────── */}
-            {step === 'forgot' && (
-              <motion.div
-                key="forgot"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.25 }}
-              >
-                <div
-                  className="rounded-[20px] border p-8"
-                  style={{ background: cardBg, borderColor: cardBorder, boxShadow: '0 4px 24px rgba(15,23,42,0.06)' }}
-                >
-                  <button
-                    onClick={() => setStep('login')}
-                    className="flex items-center gap-1.5 text-xs font-semibold mb-6 hover:opacity-70 transition-opacity"
-                    style={{ color: textSec }}
-                  >
-                    <ArrowLeft className="w-3.5 h-3.5" />
-                    Back to sign in
-                  </button>
-
-                  <AnimatePresence mode="wait">
-                    {!resetSent ? (
-                      <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                        <div className="mb-7">
-                          <h2 className="text-2xl font-bold tracking-tight mb-1" style={{ color: textPrim }}>
-                            Reset password
-                          </h2>
-                          <p className="text-sm" style={{ color: textSec }}>
-                            Enter your email and we'll send a reset link.
-                          </p>
-                        </div>
-
-                        <form onSubmit={handleReset} className="flex flex-col gap-5">
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[13px] font-semibold" style={{ color: '#374151' }}>
-                              Email address
-                            </label>
-                            <div
-                              className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all"
-                              style={{ background: inputBg, borderColor: inputBorder }}
-                            >
-                              <Mail className="w-4 h-4 shrink-0" style={{ color: textSec }} />
-                              <input
-                                type="email"
-                                placeholder="you@company.com"
-                                value={resetEmail}
-                                onChange={(e) => setResetEmail(e.target.value)}
-                                className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400"
-                                style={{ color: textPrim }}
-                                required
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={resetLoading}
-                            className="w-full py-3 rounded-xl text-white font-bold text-sm
-                                       active:scale-[0.98] transition-all disabled:opacity-70
-                                       disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                            style={{ backgroundColor: accent }}
-                          >
-                            {resetLoading ? (
-                              <>
-                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                Sending…
-                              </>
-                            ) : 'Send Reset Link'}
-                          </button>
-                        </form>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="sent"
-                        initial={{ opacity: 0, scale: 0.97 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex flex-col items-center text-center py-6"
-                      >
-                        <div
-                          className="w-14 h-14 rounded-2xl flex items-center justify-center mb-5"
-                          style={{ backgroundColor: `${accent}18` }}
-                        >
-                          <Mail className="w-7 h-7" style={{ color: accent }} />
-                        </div>
-                        <h3 className="text-lg font-bold mb-2" style={{ color: textPrim }}>Check your inbox</h3>
-                        <p className="text-sm leading-relaxed" style={{ color: textSec }}>
-                          A password reset link has been sent to<br />
-                          <span className="font-semibold" style={{ color: textPrim }}>{resetEmail}</span>
-                        </p>
-                        <button
-                          onClick={() => setStep('login')}
-                          className="mt-8 w-full py-3 rounded-xl text-white font-bold text-sm transition-all active:scale-[0.98]"
-                          style={{ backgroundColor: accent }}
-                        >
-                          Back to Sign In
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
 
                   <Footer textSec={textSec} />
                 </div>
