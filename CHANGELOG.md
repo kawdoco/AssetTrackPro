@@ -7,4 +7,5 @@ All notable changes to this project will be documented in this file.
 - Frontend UI completed using dummy/mock data
 - System diagrams: ERD, Use Case Diagram, Flowchart
 - Backend folder structure initialized
-- Login page under development
+- Login page done for the Three users
+- Backend is under devlopement
