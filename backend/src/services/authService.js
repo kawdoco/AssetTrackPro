@@ -1,10 +1,6 @@
 import bcryptjs from 'bcryptjs';
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
-
 import { generateToken, verifyToken } from '../utils/jwtUtils.js';
-
-const prisma = new PrismaClient();
+import prisma from '../config/prisma.js';
 
 /**
  * Register a new user
