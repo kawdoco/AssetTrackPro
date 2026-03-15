@@ -4,13 +4,7 @@ const { PrismaClient } = pkg;
 
 import { generateToken, verifyToken } from '../utils/jwtUtils.js';
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
-});
+const prisma = new PrismaClient();
 
 /**
  * Register a new user
