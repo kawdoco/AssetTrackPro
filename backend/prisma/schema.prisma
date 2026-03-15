@@ -1,0 +1,264 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  // Standard connection for PostgreSQL - loads from DATABASE_URL env variable
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// ORGANIZATION (Multi-tenant root)
+// ============================================================================
+model Organization {
+  id                 String   @id @default(cuid())
+  name               String   @unique
+  industry_type      String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  branches           Branch[]
+  employees          Employee[]
+  assets             Asset[]
+  
+  @@map("organization")
+}
+
+// ============================================================================
+// BRANCH (Office locations)
+// ============================================================================
+model Branch {
+  id                 String   @id @default(cuid())
+  organization_id    String
+  name               String
+  city               String
+  status             String   @default("ACTIVE") // ACTIVE, INACTIVE
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  buildings          Building[]
+
+  @@unique([organization_id, name])
+  @@map("branch")
+}
+
+// ============================================================================
+// BUILDING (Physical structures)
+// ============================================================================
+model Building {
+  id                 String   @id @default(cuid())
+  branch_id          String
+  name               String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  branch             Branch @relation(fields: [branch_id], references: [id], onDelete: Cascade)
+  zones              Zone[]
+
+  @@unique([branch_id, name])
+  @@map("building")
+}
+
+// ============================================================================
+// ZONE (Logical areas: STORAGE, OFFICE, EXIT, SECURE)
+// ============================================================================
+model Zone {
+  id                 String   @id @default(cuid())
+  building_id        String
+  zone_name          String
+  zone_type          String   // STORAGE, OFFICE, EXIT, SECURE
+  description        String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  building           Building @relation(fields: [building_id], references: [id], onDelete: Cascade)
+  gates              Gate[]
+  assets_lastseen    Asset[] @relation("asset_lastseen_zone")
+  movements_from     MovementEvent[] @relation("movement_zone_from")
+  movements_to       MovementEvent[] @relation("movement_zone_to")
+
+  @@unique([building_id, zone_name])
+  @@map("zone")
+}
+
+// ============================================================================
+// GATE (RFID reader locations)
+// ============================================================================
+model Gate {
+  id                 String   @id @default(cuid())
+  zone_id            String
+  gate_name          String
+  direction          String   // ENTRY, EXIT, BOTH
+  reader_model       String?  // IMPINJ_R700, ZEBRA_FX, etc.
+  is_active          Boolean  @default(true)
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  zone               Zone @relation(fields: [zone_id], references: [id], onDelete: Cascade)
+  movement_events    MovementEvent[]
+
+  @@unique([zone_id, gate_name])
+  @@map("gate")
+}
+
+// ============================================================================
+// EMPLOYEE (Staff members)
+// ============================================================================
+model Employee {
+  id                 String   @id @default(cuid())
+  organization_id    String
+  employee_code      String
+  name               String
+  email              String?
+  status             String   @default("ACTIVE") // ACTIVE, RESIGNED, LEAVE
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  asset_assignments  AssetAssignment[]
+
+  @@unique([organization_id, employee_code])
+  @@map("employee")
+}
+
+// ============================================================================
+// ASSET (RFID-tagged devices)
+// ============================================================================
+model Asset {
+  id                 String   @id @default(cuid())
+  organization_id    String
+  asset_tag_uid      String   @unique // EPC Gen2 RFID or UUID
+  asset_type         String   // LAPTOP, TABLET, PHONE, MONITOR, OTHER
+  model              String?
+  serial_number      String?
+  status             String   @default("ACTIVE") // ACTIVE, LOST, RECOVERED, RETIRED
+  last_seen_zone_id  String?
+  last_seen_time     DateTime?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  organization       Organization @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+  last_seen_zone    Zone? @relation("asset_lastseen_zone", fields: [last_seen_zone_id], references: [id])
+  asset_assignments  AssetAssignment[]
+  movement_events    MovementEvent[]
+  alerts             Alert[]
+
+  @@index([organization_id])
+  @@index([asset_tag_uid])
+  @@index([status])
+  @@map("asset")
+}
+
+// ============================================================================
+// ASSET_ASSIGNMENT (Who has what - history matters)
+// ============================================================================
+model AssetAssignment {
+  id                 String   @id @default(cuid())
+  asset_id           String
+  employee_id        String
+  assigned_at        DateTime @default(now())
+  returned_at        DateTime? // Null = still assigned
+  notes              String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  asset              Asset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  employee           Employee @relation(fields: [employee_id], references: [id], onDelete: Cascade)
+
+  @@index([asset_id])
+  @@index([employee_id])
+  @@index([returned_at])
+  @@map("asset_assignment")
+}
+
+// ============================================================================
+// MOVEMENT_EVENT (⭐ Heart of system - Immutable log)
+// CRITICAL: NEVER UPDATE OR DELETE! Only INSERT!
+// ============================================================================
+model MovementEvent {
+  id                 String   @id @default(cuid())
+  asset_id           String
+  gate_id            String
+  zone_from_id       String
+  zone_to_id         String
+  event_type         String   // ENTER, EXIT
+  event_time         DateTime @default(now())
+  trigger_source     String   // RFID, SIMULATED, MANUAL
+  signal_strength    Int?     // RSSI for RFID
+  created_at         DateTime @default(now())
+  // NO updated_at for immutable log!
+
+  // Relations
+  asset              Asset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  gate               Gate @relation(fields: [gate_id], references: [id])
+  zone_from          Zone @relation("movement_zone_from", fields: [zone_from_id], references: [id])
+  zone_to            Zone @relation("movement_zone_to", fields: [zone_to_id], references: [id])
+  alerts             Alert[]
+
+  @@index([asset_id, event_time])
+  @@index([gate_id, event_time])
+  @@index([zone_from_id])
+  @@index([zone_to_id])
+  @@index([event_time])
+  @@map("movement_event")
+}
+
+// ============================================================================
+// ALERT / INCIDENT (Security incidents and violations)
+// ============================================================================
+model Alert {
+  id                 String   @id @default(cuid())
+  asset_id           String
+  event_id           String?  // Can be null for non-event-triggered alerts
+  alert_type         String   // UNAUTHORIZED_EXIT, OVERDUE_RETURN, LOST_ASSET, ZONE_VIOLATION, TAMPERED_TAG
+  severity           String   // CRITICAL, HIGH, MEDIUM, LOW
+  message            String
+  resolved_at        DateTime?
+  resolution_notes   String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  // Relations
+  asset              Asset @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  movement_event     MovementEvent? @relation(fields: [event_id], references: [id], onDelete: SetNull)
+
+  @@index([asset_id])
+  @@index([severity])
+  @@index([resolved_at])
+  @@index([alert_type])
+  @@index([created_at])
+  @@map("alert")
+}
+
+// ============================================================================
+// USER / AUTH (For login and system access)
+// ============================================================================
+model User {
+  id                 String   @id @default(cuid())
+  email              String   @unique
+  password           String   // Hashed with bcryptjs
+  full_name          String
+  role               String   @default("VIEWER") // ADMIN, MANAGER, SECURITY, VIEWER
+  organization_id    String   // Even users belong to organizations
+  is_active          Boolean  @default(true)
+  last_login         DateTime?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  @@index([email])
+  @@index([organization_id])
+  @@map("user")
+}

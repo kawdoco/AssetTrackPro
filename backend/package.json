@@ -8,12 +8,22 @@
     "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["asset", "management", "tracking", "api"],
+  "keywords": [
+    "asset",
+    "management",
+    "tracking",
+    "api"
+  ],
   "author": "AssetTrackPro Team",
   "license": "ISC",
   "type": "module",
   "dependencies": {
-    "express": "^5.2.1"
+    "@prisma/client": "^7.5.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
