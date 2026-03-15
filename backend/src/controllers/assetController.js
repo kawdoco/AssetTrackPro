@@ -1,8 +1,3 @@
-/**
- * Asset Controller
- * Handles all asset-related business logic
- */
-
 // Get all assets
 export const getAllAssets = async (req, res) => {
   try {

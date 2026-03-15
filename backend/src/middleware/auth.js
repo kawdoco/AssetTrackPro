@@ -1,10 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { verifyToken, extractToken } from '../utils/jwtUtils.js';
 
-/**
- * Authentication Middleware - Validates JWT token
- * Attaches decoded user data to req.user
- */
 export const authenticate = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -39,11 +35,6 @@ export const authenticate = (req, res, next) => {
   }
 };
 
-/**
- * Authorization Middleware - Checks user role
- * @param {...string} roles - Allowed roles
- * @example: authorize('ADMIN', 'MANAGER')
- */
 export const authorize = (...roles) => {
   return (req, res, next) => {
     try {
@@ -72,10 +63,6 @@ export const authorize = (...roles) => {
   };
 };
 
-/**
- * Multi-tenant middleware - Filters by organization_id
- * Ensures users can only access their organization's data
- */
 export const tenantScope = (req, res, next) => {
   try {
     if (!req.user) {
@@ -85,7 +72,6 @@ export const tenantScope = (req, res, next) => {
       });
     }
 
-    // Attach organization_id to request for query filtering
     req.organization_id = req.user.organization_id;
     next();
   } catch (error) {

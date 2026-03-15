@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { Sidebar } from "./components/sidebar";
 import { TopBar } from "./components/top-bar";
@@ -18,6 +18,7 @@ import { OrganizationManagement } from "./components/OrganizationManagement";
 import { Package, Truck, AlertCircle, RefreshCw } from "lucide-react";
 
 import LoginPage from "../auth/LoginPage";
+import { useAuth } from "../hooks/useAuth";
 
 type ModalType = "asset" | "employee" | "event";
 
@@ -31,7 +32,7 @@ export type TabId =
   | "settings";
 
 export default function App() {
-  const [isAuthed, setIsAuthed] = useState(false);
+  const { isAuthenticated, user, token, loading, login, logout, getCurrentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
 
   const [modalConfig, setModalConfig] = useState<{
@@ -44,9 +45,30 @@ export default function App() {
     type: "asset",
   });
 
+  useEffect(() => {
+    if (token && !user) {
+      getCurrentUser();
+    }
+  }, [token, user]);
+
   // Show login page until authenticated
-  if (!isAuthed) {
-    return <LoginPage onLogin={() => setIsAuthed(true)} />;
+  if (!isAuthenticated) {
+    return (
+      <LoginPage
+        onLogin={async (email: string, password: string) => {
+          try {
+            await login(email, password).unwrap();
+            return true;
+          } catch {
+            return false;
+          }
+        }}
+      />
+    );
+  }
+
+  if (loading && !user) {
+    return <div className="p-8 text-sm text-gray-600">Loading account...</div>;
   }
 
   const handleOpenModal = (type: ModalType) => {
@@ -149,7 +171,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         onLogout={() => {
-          setIsAuthed(false);
+          logout();
           setActiveTab("dashboard");
         }}
       />
