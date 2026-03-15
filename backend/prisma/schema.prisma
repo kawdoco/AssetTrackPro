@@ -7,8 +7,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Standard connection for PostgreSQL - loads from DATABASE_URL env variable
-  url      = env("DATABASE_URL")
 }
 
 // ============================================================================

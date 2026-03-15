@@ -1,8 +1,16 @@
 import bcryptjs from 'bcryptjs';
-import { PrismaClient } from '@prisma/client';
+import pkg from '@prisma/client';
+const { PrismaClient } = pkg;
+
 import { generateToken, verifyToken } from '../utils/jwtUtils.js';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
+});
 
 /**
  * Register a new user
