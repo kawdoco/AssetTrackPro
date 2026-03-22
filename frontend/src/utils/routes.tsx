@@ -96,7 +96,7 @@ export const routes = [
     element: <MainLayout />,
     children: [
       {
-        path: "dashboard",
+        path: "",
         element: <Dashboard />,
       },
       {
