@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ZoomIn, ZoomOut, Maximize, MousePointer2, Info } from 'lucide-react';
+import { MapPin, ZoomIn, ZoomOut, Maximize, MousePointer2, Info } from '@/icons/lucideMuiAdapter';
 
 const zones = [
   { id: 'A', name: 'Warehouse A', x: 15, y: 20, w: 35, h: 45, color: '#248AFF' },
@@ -150,3 +150,5 @@ export const AssetMap = () => {
     </div>
   );
 };
+
+

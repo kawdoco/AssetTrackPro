@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Mail, Lock, Eye, EyeOff, Shield, ChevronRight,
   ArrowLeft, ShieldCheck, Building2, UserCog,
-} from 'lucide-react';
+} from '@/icons/lucideMuiAdapter';
 import logo from '../assets/logo.png';
 import rfidBg from '../assets/Supply.jpg';
 import ForgotPasswordPage from './Forgotpasswordpage';
@@ -450,3 +450,4 @@ function Footer({ textSec }: { textSec: string }) {
     </div>
   );
 }
+

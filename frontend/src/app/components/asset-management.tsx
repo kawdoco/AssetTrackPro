@@ -5,7 +5,7 @@ import {
   ChevronRight, Box, Clock, MapPin, History,
   ArrowUpRight, ArrowDownRight, User, AlertTriangle,
   X
-} from 'lucide-react';
+} from '@/icons/lucideMuiAdapter';
 
 const assetsData = [
   { id: 'RF-8829', name: 'Industrial Drill P-20', category: 'Heavy Machinery', location: 'Warehouse A', status: 'normal', lastSeen: '2 mins ago', holder: 'Mike Chen' },
@@ -221,3 +221,5 @@ export const AssetManagement = () => {
     </div>
   );
 };
+
+

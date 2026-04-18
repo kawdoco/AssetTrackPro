@@ -15,7 +15,7 @@ import Settings from "./components/settings";
 import AlertsIncidents from "./components/AlertsIncidents";
 import { OrganizationManagement } from "./components/OrganizationManagement";
 
-import { Package, Truck, AlertCircle, RefreshCw } from "lucide-react";
+import { Package, Truck, AlertCircle, RefreshCw } from "@/icons/lucideMuiAdapter";
 
 import LoginPage from "../auth/LoginPage";
 import { useAuth } from "../hooks/useAuth";
@@ -192,3 +192,4 @@ export default function App() {
     </div>
   );
 }
+

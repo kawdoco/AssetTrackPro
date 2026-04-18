@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Bell, ChevronDown } from 'lucide-react';
+import { Search, Bell, ChevronDown } from '@/icons/lucideMuiAdapter';
 import { motion } from 'motion/react';
 
 export const TopBar = () => {
@@ -54,3 +54,5 @@ export const TopBar = () => {
     </header>
   );
 };
+
+

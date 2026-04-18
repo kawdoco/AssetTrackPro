@@ -7,7 +7,7 @@ import errorHandler from './middleware/errorHandler.js';
 const app = express();
 
 // --- CORS ---------------------------------------------------------------------
-app.use(cors({ origin: process.env.CORS_ORIGIN || 'http://localhost:5173' }));
+app.use(cors());
 
 // --- Body parsers -------------------------------------------------------------
 app.use(express.json());

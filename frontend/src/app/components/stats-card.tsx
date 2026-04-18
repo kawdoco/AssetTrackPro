@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { TrendingUp, TrendingDown, LucideIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, LucideIcon } from '@/icons/lucideMuiAdapter';
 
 interface StatsCardProps {
   title: string;
@@ -45,3 +45,5 @@ export const StatsCard = ({ title, value, subtext, trend, trendType, icon: Icon,
     </motion.div>
   );
 };
+
+

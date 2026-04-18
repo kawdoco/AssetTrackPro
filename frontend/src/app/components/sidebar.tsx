@@ -8,7 +8,7 @@ import {
   FileText,
   Settings,
   ChevronRight,
-} from "lucide-react";
+} from "@/icons/lucideMuiAdapter";
 
 import logo from "../../assets/logo.png";
 import type { TabId } from "../App";
@@ -108,3 +108,4 @@ export const Sidebar = ({ activeTab, setActiveTab, onLogout }: SidebarProps) => 
     </aside>
   );
 };
+

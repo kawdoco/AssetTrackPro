@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp } from "@/icons/lucideMuiAdapter";
 
 type Alert = {
   id: string;
@@ -235,3 +235,4 @@ export default function AlertsIncidents() {
     </div>
   );
 }
+

@@ -9,7 +9,7 @@ import {
   ArrowRightLeft,
   AlertTriangle,
   X,
-} from "lucide-react";
+} from "@/icons/lucideMuiAdapter";
 
 const employeesData = [
   {
@@ -236,3 +236,4 @@ export const EmployeeManagement = () => {
     </div>
   );
 };
+

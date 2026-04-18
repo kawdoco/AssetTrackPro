@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {User,Lock,Bell,Building2,Save,}
-from "lucide-react";
+from "@/icons/lucideMuiAdapter";
 
 export default function Settings() {
   const [profile, setProfile] = useState({

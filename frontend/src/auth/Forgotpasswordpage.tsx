@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, ArrowLeft } from 'lucide-react';
+import { Mail, ArrowLeft } from '@/icons/lucideMuiAdapter';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -157,3 +157,4 @@ export default function ForgotPasswordPage({ accent, onBack }: ForgotPasswordPag
     </motion.div>
   );
 }
+

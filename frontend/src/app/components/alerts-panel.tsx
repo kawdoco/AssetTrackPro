@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AlertCircle, CheckCircle2, AlertTriangle, ChevronRight, X, Clock, MapPin, Tag } from 'lucide-react';
+import { AlertCircle, CheckCircle2, AlertTriangle, ChevronRight, X, Clock, MapPin, Tag } from '@/icons/lucideMuiAdapter';
 
 const alerts = [
   {
@@ -163,3 +163,4 @@ export const AlertsPanel = () => {
     </div>
   );
 };
+

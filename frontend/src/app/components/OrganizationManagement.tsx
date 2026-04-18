@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Building2, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
+import { Building2, ChevronDown, ChevronUp, Plus, X } from '@/icons/lucideMuiAdapter';
 
 interface Branch {
   id: string;
@@ -258,3 +258,4 @@ export const OrganizationManagement = () => {
     </div>
   );
 };
+

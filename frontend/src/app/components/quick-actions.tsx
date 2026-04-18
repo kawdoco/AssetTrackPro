@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Box, UserPlus, Zap, ArrowRight, Activity, Globe } from 'lucide-react';
+import { Box, UserPlus, Zap, ArrowRight, Activity, Globe } from '@/icons/lucideMuiAdapter';
 
 interface QuickActionsProps {
   onAction: (type: 'asset' | 'employee' | 'event') => void;
@@ -85,3 +85,4 @@ export const QuickActions = ({ onAction }: QuickActionsProps) => {
     </div>
   );
 };
+
