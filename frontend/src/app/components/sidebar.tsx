@@ -51,7 +51,7 @@ export const Sidebar = ({
     >
       <div className="p-4 flex flex-col h-full">
         {/* Logo */}
-        <div className={`flex items-center mb-6 ${isCollapsed ? "justify-center" : "justify-between gap-3"}`}>
+        <div className={`flex items-center mb-6 ${isCollapsed ? "flex-col gap-2" : "justify-between gap-3"}`}>
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <img
               src={logo}
@@ -80,7 +80,7 @@ export const Sidebar = ({
           {isCollapsed && (
             <button
               onClick={onToggleCollapse}
-              className="absolute top-4 right-1/2 translate-x-1/2 h-8 w-8 rounded-md border border-[var(--surface-border)] hover:bg-[var(--surface-2)] inline-flex items-center justify-center text-[var(--text-secondary)]"
+              className="h-8 w-8 rounded-md border border-[var(--surface-border)] hover:bg-[var(--surface-2)] inline-flex items-center justify-center text-[var(--text-secondary)]"
               aria-label="Expand sidebar"
               title="Expand sidebar"
             >
