@@ -49,24 +49,24 @@ export const AlertsPanel = () => {
   const [selectedAlert, setSelectedAlert] = useState<typeof alerts[0] | null>(null);
 
   return (
-    <div className="h-full flex gap-6">
-      <div className="bg-white p-6 rounded-[16px] border border-gray-100 flex-1 flex flex-col shadow-sm">
-        <div className="flex justify-between items-center mb-6">
+    <div className="h-full flex gap-4">
+      <div className="bg-[var(--surface-0)] p-4 rounded-lg border border-[var(--surface-border)] flex-1 flex flex-col shadow-sm">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <h3 className="font-bold text-[#395A8F] text-lg">System Alerts</h3>
-            <p className="text-xs text-gray-500 uppercase tracking-wider font-bold">Real-time status</p>
+            <h3 className="font-semibold text-[var(--text-primary)] text-base">System Alerts</h3>
+            <p className="text-[11px] text-[var(--text-muted)] uppercase tracking-wide font-semibold">Real-time status</p>
           </div>
-          <button className="text-[#248AFF] text-sm font-bold hover:underline px-2 py-1">View History</button>
+          <button className="text-[var(--brand-600)] text-sm font-semibold hover:underline px-2 py-1">View History</button>
         </div>
 
         <div className="space-y-3 flex-1 overflow-y-auto pr-1">
           {alerts.map((alert) => (
             <motion.div
               key={alert.id}
-              whileHover={{ x: 4, backgroundColor: 'rgb(249 250 251)' }}
+              whileHover={{ x: 2, backgroundColor: 'var(--surface-2)' }}
               onClick={() => setSelectedAlert(alert)}
-              className={`group flex gap-4 p-4 rounded-xl border border-gray-50 cursor-pointer transition-all ${
-                selectedAlert?.id === alert.id ? 'bg-gray-50 border-[#248AFF]/20' : 'bg-white'
+              className={`group flex gap-4 p-3 rounded-md border border-[var(--surface-border)] cursor-pointer transition-all ${
+                selectedAlert?.id === alert.id ? 'bg-[var(--brand-200)]/30 border-[var(--brand-300)]' : 'bg-[var(--surface-0)]'
               }`}
             >
               <div className="mt-0.5">
@@ -76,13 +76,13 @@ export const AlertsPanel = () => {
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center mb-1">
-                  <h4 className="text-sm font-bold text-[#395A8F]">{alert.title}</h4>
-                  <span className="text-[10px] font-bold text-gray-400">{alert.time}</span>
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)]">{alert.title}</h4>
+                  <span className="text-[10px] font-semibold text-[var(--text-muted)]">{alert.time}</span>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed line-clamp-1">{alert.desc}</p>
+                <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-1">{alert.desc}</p>
               </div>
               <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                <ChevronRight className="w-4 h-4 text-gray-300" />
+                <ChevronRight className="w-4 h-4 text-[var(--text-muted)]" />
               </div>
             </motion.div>
           ))}
@@ -95,64 +95,66 @@ export const AlertsPanel = () => {
             initial={{ width: 0, opacity: 0 }}
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
-            className="bg-white border border-gray-100 rounded-[16px] overflow-hidden shadow-xl"
+            className="bg-[var(--surface-0)] border border-[var(--surface-border)] rounded-lg overflow-hidden shadow-lg"
           >
-            <div className="p-6 h-full flex flex-col">
-              <div className="flex justify-between items-start mb-6">
+            <div className="p-4 h-full flex flex-col">
+              <div className="flex justify-between items-start mb-4">
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  className="w-10 h-10 rounded-md flex items-center justify-center border border-[var(--surface-border)]"
                   style={{ backgroundColor: `${selectedAlert.color}15` }}
                 >
                   <AlertCircle className="w-6 h-6" style={{ color: selectedAlert.color }} />
                 </div>
                 <button
                   onClick={() => setSelectedAlert(null)}
-                  className="p-1.5 hover:bg-gray-100 rounded-full text-gray-400 transition-colors"
+                  title="Close details"
+                  aria-label="Close details"
+                  className="p-1.5 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
-              <h3 className="font-bold text-[#395A8F] text-lg mb-2">{selectedAlert.title}</h3>
-              <p className="text-sm text-gray-500 leading-relaxed mb-8">{selectedAlert.desc}</p>
+              <h3 className="font-semibold text-[var(--text-primary)] text-base mb-2">{selectedAlert.title}</h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed mb-6">{selectedAlert.desc}</p>
 
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-gray-400" />
+                  <div className="w-8 h-8 rounded-md bg-[var(--surface-1)] border border-[var(--surface-border)] flex items-center justify-center">
+                    <Clock className="w-4 h-4 text-[var(--text-muted)]" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Timestamp</p>
-                    <p className="text-sm font-bold text-[#395A8F]">Today, {selectedAlert.time}</p>
+                    <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Timestamp</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">Today, {selectedAlert.time}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <MapPin className="w-4 h-4 text-gray-400" />
+                  <div className="w-8 h-8 rounded-md bg-[var(--surface-1)] border border-[var(--surface-border)] flex items-center justify-center">
+                    <MapPin className="w-4 h-4 text-[var(--text-muted)]" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Location</p>
-                    <p className="text-sm font-bold text-[#395A8F]">{selectedAlert.location}</p>
+                    <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Location</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{selectedAlert.location}</p>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-                    <Tag className="w-4 h-4 text-gray-400" />
+                  <div className="w-8 h-8 rounded-md bg-[var(--surface-1)] border border-[var(--surface-border)] flex items-center justify-center">
+                    <Tag className="w-4 h-4 text-[var(--text-muted)]" />
                   </div>
                   <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Asset ID</p>
-                    <p className="text-sm font-bold text-[#395A8F]">{selectedAlert.asset}</p>
+                    <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wide">Asset ID</p>
+                    <p className="text-sm font-semibold text-[var(--text-primary)]">{selectedAlert.asset}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-auto pt-6 border-t border-gray-100 flex gap-3">
-                <button className="flex-1 py-3 rounded-xl bg-[#248AFF] text-white font-bold text-xs hover:bg-[#1c7ae6] transition-colors">
+              <div className="mt-auto pt-4 border-t border-[var(--surface-border)] flex gap-3">
+                <button className="flex-1 py-2.5 rounded-md bg-[var(--brand-600)] text-white font-semibold text-xs hover:bg-[var(--brand-700)] transition-colors">
                   Acknowledge
                 </button>
-                <button className="flex-1 py-3 rounded-xl border border-gray-100 text-[#395A8F] font-bold text-xs hover:bg-gray-50 transition-colors">
+                <button className="flex-1 py-2.5 rounded-md border border-[var(--surface-border)] text-[var(--text-primary)] font-semibold text-xs hover:bg-[var(--surface-2)] transition-colors">
                   Investigate
                 </button>
               </div>

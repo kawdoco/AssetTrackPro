@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { MapPin, ZoomIn, ZoomOut, Maximize, MousePointer2, Info } from '@/icons/lucideMuiAdapter';
+import { MapPin, ZoomIn, ZoomOut, Maximize, MousePointer2 } from '@/icons/lucideMuiAdapter';
 
 const zones = [
   { id: 'A', name: 'Warehouse A', x: 15, y: 20, w: 35, h: 45, color: '#248AFF' },
@@ -35,27 +35,27 @@ export const AssetMap = () => {
   }, []);
 
   return (
-    <div className="bg-white p-6 rounded-[16px] border border-gray-100 shadow-sm h-full flex flex-col relative overflow-hidden">
-      <div className="flex justify-between items-center mb-6">
+    <div className="bg-[var(--surface-0)] p-4 rounded-lg border border-[var(--surface-border)] shadow-sm h-full flex flex-col relative overflow-hidden">
+      <div className="flex justify-between items-center mb-4">
         <div>
-          <h3 className="font-bold text-[#395A8F] text-lg">Zone Activity</h3>
-          <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Interactive Live Tracking</p>
+          <h3 className="font-semibold text-[var(--text-primary)] text-base">Zone Activity</h3>
+          <p className="text-[11px] text-[var(--text-muted)] font-semibold uppercase tracking-wide">Interactive Live Tracking</p>
         </div>
-        <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-100">
-          <button onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 hover:bg-white rounded-lg transition-all text-gray-500 hover:text-[#248AFF]">
+        <div className="flex items-center gap-2 bg-[var(--surface-1)] p-1.5 rounded-md border border-[var(--surface-border)]">
+          <button title="Zoom in" aria-label="Zoom in" onClick={() => setZoom(Math.min(2, zoom + 0.2))} className="p-1.5 hover:bg-[var(--surface-0)] rounded-md transition-all text-[var(--text-secondary)] hover:text-[var(--brand-600)]">
             <ZoomIn className="w-4 h-4" />
           </button>
-          <button onClick={() => setZoom(Math.max(0.5, zoom - 0.2))} className="p-1.5 hover:bg-white rounded-lg transition-all text-gray-500 hover:text-[#248AFF]">
+          <button title="Zoom out" aria-label="Zoom out" onClick={() => setZoom(Math.max(0.5, zoom - 0.2))} className="p-1.5 hover:bg-[var(--surface-0)] rounded-md transition-all text-[var(--text-secondary)] hover:text-[var(--brand-600)]">
             <ZoomOut className="w-4 h-4" />
           </button>
-          <div className="w-[1px] h-4 bg-gray-200 mx-1"></div>
-          <button className="p-1.5 hover:bg-white rounded-lg transition-all text-gray-500">
+          <div className="w-px h-4 bg-[var(--surface-border)] mx-1"></div>
+          <button title="Fullscreen" aria-label="Fullscreen" className="p-1.5 hover:bg-[var(--surface-0)] rounded-md transition-all text-[var(--text-secondary)]">
             <Maximize className="w-4 h-4" />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 relative bg-gray-50 rounded-2xl border border-gray-200 overflow-hidden cursor-crosshair">
+      <div className="flex-1 relative bg-[var(--surface-1)] rounded-lg border border-[var(--surface-border)] overflow-hidden cursor-crosshair">
         <motion.div
           animate={{ scale: zoom }}
           className="w-full h-full relative origin-center"
@@ -63,7 +63,7 @@ export const AssetMap = () => {
           {/* Map Grid */}
           <div className="absolute inset-0 grid grid-cols-12 grid-rows-12 opacity-30 pointer-events-none">
             {Array.from({ length: 144 }).map((_, i) => (
-              <div key={i} className="border-[0.5px] border-gray-300"></div>
+              <div key={i} className="border-[0.5px] border-[var(--surface-border)]"></div>
             ))}
           </div>
 
@@ -81,8 +81,8 @@ export const AssetMap = () => {
                 borderColor: `${zone.color}30`,
               }}
             >
-              <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-gray-100 shadow-sm transition-transform group-hover:scale-110">
-                <span className="text-[10px] font-black text-[#395A8F] uppercase tracking-widest">{zone.name}</span>
+              <div className="bg-[var(--surface-0)]/90 backdrop-blur-sm px-3 py-1.5 rounded-md border border-[var(--surface-border)] shadow-sm transition-transform group-hover:scale-105">
+                <span className="text-[10px] font-semibold text-[var(--text-primary)] uppercase tracking-widest">{zone.name}</span>
               </div>
             </motion.div>
           ))}
@@ -113,17 +113,18 @@ export const AssetMap = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
               className="absolute bottom-6 left-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-xl z-20 pointer-events-none"
+              className="absolute bottom-4 left-4 bg-[var(--surface-0)] p-3 rounded-md border border-[var(--surface-border)] shadow-lg z-20 pointer-events-none"
             >
               <div className="flex items-center gap-3 mb-2">
                 <div className={`w-2 h-2 rounded-full ${hoveredAsset.status === 'warning' ? 'bg-amber-500' : 'bg-[#248AFF]'}`}></div>
-                <span className="text-sm font-bold text-[#395A8F]">{hoveredAsset.tag}</span>
+                <span className="text-sm font-semibold text-[var(--text-primary)]">{hoveredAsset.tag}</span>
               </div>
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase">
+                <div className="flex items-center gap-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase">
                   <MapPin className="w-3 h-3" />
                   <span>Moving to Sector 4</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase">
+                <div className="flex items-center gap-2 text-[10px] font-semibold text-[var(--text-muted)] uppercase">
                   <MousePointer2 className="w-3 h-3" />
                   <span>Click to investigate</span>
                 </div>
@@ -133,18 +134,18 @@ export const AssetMap = () => {
         </AnimatePresence>
       </div>
 
-      <div className="mt-4 flex items-center gap-6">
+      <div className="mt-3 flex items-center gap-5">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-[#248AFF]"></div>
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Asset Active</span>
+          <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Asset Active</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Maintenance</span>
+          <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Maintenance</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 rounded-full bg-rose-500"></div>
-          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Restricted Zone</span>
+          <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Restricted Zone</span>
         </div>
       </div>
     </div>

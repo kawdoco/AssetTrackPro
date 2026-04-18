@@ -109,12 +109,12 @@ export default function AlertsIncidents() {
   };
 
   return (
-    <div className="p-6">
-      <h2 className="text-lg mb-4">Alerts & Incidents</h2>
+    <div className="p-0">
+      <h2 className="text-base font-semibold text-[var(--text-primary)] mb-3">Alerts & Incidents</h2>
 
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] shadow-sm overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+          <thead className="bg-[var(--surface-1)] text-[var(--text-muted)] text-[11px] uppercase tracking-wide">
             <tr>
               <th className="px-6 py-3 text-left">Alert</th>
               <th className="px-6 py-3 text-left">Asset</th>
@@ -133,15 +133,15 @@ export default function AlertsIncidents() {
                 <>
                   <tr
                     key={alert.id}
-                    className="border-t hover:bg-gray-50 transition-colors"
+                    className="border-t border-[var(--surface-border)] hover:bg-[var(--surface-2)] transition-colors"
                   >
-                    <td className="px-6 py-4">{alert.title}</td>
-                    <td className="px-6 py-4">{alert.asset}</td>
-                    <td className="px-6 py-4">{alert.location}</td>
+                    <td className="px-6 py-3 text-[var(--text-primary)] font-medium">{alert.title}</td>
+                    <td className="px-6 py-3 text-[var(--text-secondary)]">{alert.asset}</td>
+                    <td className="px-6 py-3 text-[var(--text-secondary)]">{alert.location}</td>
 
                     <td className="px-6 py-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs ${getPriorityStyle(
+                        className={`px-3 py-1 rounded-full text-[11px] font-semibold ${getPriorityStyle(
                           alert.priority
                         )}`}
                       >
@@ -151,7 +151,7 @@ export default function AlertsIncidents() {
 
                     <td className="px-6 py-4">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs ${getStatusStyle(
+                        className={`px-3 py-1 rounded-full text-[11px] font-semibold ${getStatusStyle(
                           alert.status
                         )}`}
                       >
@@ -164,26 +164,26 @@ export default function AlertsIncidents() {
                         onClick={() =>
                           setExpanded(isExpanded ? null : alert.id)
                         }
-                        className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-[var(--surface-1)] transition-colors"
                       >
                         {isExpanded ? (
-                          <ChevronUp className="w-4 h-4 text-gray-400" />
+                          <ChevronUp className="w-4 h-4 text-[var(--text-muted)]" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 text-gray-400" />
+                          <ChevronDown className="w-4 h-4 text-[var(--text-muted)]" />
                         )}
                       </button>
                     </td>
                   </tr>
 
                   {isExpanded && (
-                    <tr className="bg-gray-50">
+                    <tr className="bg-[var(--surface-1)] border-t border-[var(--surface-border)]">
                       <td colSpan={6} className="px-6 py-4">
                         <div className="flex justify-between items-start">
                           <div>
-                            <p className="text-sm text-gray-600 mb-2">
+                            <p className="text-sm text-[var(--text-secondary)] mb-2">
                               {alert.description}
                             </p>
-                            <p className="text-xs text-gray-400">
+                            <p className="text-xs text-[var(--text-muted)]">
                               Reported at: {alert.time}
                             </p>
                           </div>
@@ -195,7 +195,7 @@ export default function AlertsIncidents() {
                                   onClick={() =>
                                     updateStatus(alert.id, "Acknowledged")
                                   }
-                                  className="px-3 py-2 bg-blue-500 text-white rounded-xl text-xs hover:bg-blue-600 transition-colors"
+                                  className="px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-xs font-semibold hover:bg-[var(--brand-700)] transition-colors"
                                 >
                                   Acknowledge
                                 </button>
@@ -204,7 +204,7 @@ export default function AlertsIncidents() {
                                   onClick={() =>
                                     updateStatus(alert.id, "Resolved")
                                   }
-                                  className="px-3 py-2 bg-green-500 text-white rounded-xl text-xs hover:bg-green-600 transition-colors"
+                                  className="px-3 py-2 bg-[var(--success-500)] text-white rounded-md text-xs font-semibold hover:opacity-90 transition-colors"
                                 >
                                   Resolve
                                 </button>
@@ -216,7 +216,7 @@ export default function AlertsIncidents() {
                                 onClick={() =>
                                   updateStatus(alert.id, "Resolved")
                                 }
-                                className="px-3 py-2 bg-green-500 text-white rounded-xl text-xs hover:bg-green-600 transition-colors"
+                                className="px-3 py-2 bg-[var(--success-500)] text-white rounded-md text-xs font-semibold hover:opacity-90 transition-colors"
                               >
                                 Resolve
                               </button>

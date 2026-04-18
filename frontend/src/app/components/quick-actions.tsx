@@ -8,77 +8,77 @@ interface QuickActionsProps {
 
 export const QuickActions = ({ onAction }: QuickActionsProps) => {
   return (
-    <div className="bg-white p-6 rounded-[16px] border border-gray-100 shadow-sm h-full flex flex-col">
-      <div className="mb-6">
-        <h3 className="font-bold text-[#395A8F] text-lg">Quick Operations</h3>
-        <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">Common Workflows</p>
+    <div className="bg-[var(--surface-0)] p-4 rounded-lg border border-[var(--surface-border)] shadow-sm h-full flex flex-col">
+      <div className="mb-4">
+        <h3 className="font-semibold text-[var(--text-primary)] text-base">Quick Operations</h3>
+        <p className="text-[11px] text-[var(--text-muted)] font-semibold uppercase tracking-wide">Common Workflows</p>
       </div>
 
-      <div className="space-y-4 flex-1">
+      <div className="space-y-3 flex-1">
         <motion.button
-          whileHover={{ scale: 1.02, x: 4 }}
+          whileHover={{ scale: 1.01, x: 2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onAction('asset')}
-          className="w-full bg-[#248AFF] hover:bg-[#1c7ae6] text-white py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-between transition-all shadow-lg shadow-blue-100 group"
+          className="w-full bg-[var(--brand-600)] hover:bg-[var(--brand-700)] text-white py-3 px-4 rounded-md font-semibold text-sm flex items-center justify-between transition-all group"
         >
           <div className="flex items-center gap-3">
-            <Box className="w-5 h-5 opacity-80" />
+            <Box className="w-4 h-4 opacity-90" />
             <span>Register New Asset</span>
           </div>
           <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.02, x: 4 }}
+          whileHover={{ scale: 1.01, x: 2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onAction('employee')}
-          className="w-full bg-white border border-gray-100 hover:border-[#248AFF]/30 hover:bg-gray-50 text-[#395A8F] py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-between transition-all group"
+          className="w-full bg-[var(--surface-0)] border border-[var(--surface-border)] hover:border-[var(--brand-300)] hover:bg-[var(--surface-2)] text-[var(--text-primary)] py-3 px-4 rounded-md font-semibold text-sm flex items-center justify-between transition-all group"
         >
           <div className="flex items-center gap-3">
-            <UserPlus className="w-5 h-5 text-[#248AFF]" />
+            <UserPlus className="w-4 h-4 text-[var(--brand-600)]" />
             <span>Onboard Employee</span>
           </div>
-          <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-gray-300" />
+          <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-[var(--text-muted)]" />
         </motion.button>
 
         <motion.button
-          whileHover={{ scale: 1.02, x: 4 }}
+          whileHover={{ scale: 1.01, x: 2 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => onAction('event')}
-          className="w-full bg-[#395A8F] hover:bg-[#2d4771] text-white py-4 px-6 rounded-2xl font-bold text-sm flex items-center justify-between transition-all group shadow-lg shadow-blue-100/10"
+          className="w-full bg-[var(--text-secondary)] hover:bg-[var(--text-primary)] text-white py-3 px-4 rounded-md font-semibold text-sm flex items-center justify-between transition-all group"
         >
           <div className="flex items-center gap-3">
-            <Zap className="w-5 h-5 text-[#248AFF]" />
+            <Zap className="w-4 h-4 text-[var(--brand-400)]" />
             <span>Manual Event Trigger</span>
           </div>
           <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
         </motion.button>
       </div>
 
-      <div className="mt-8 space-y-4">
-        <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+      <div className="mt-5 space-y-3">
+        <div className="p-3 rounded-md bg-[var(--surface-1)] border border-[var(--surface-border)]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Activity className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs font-bold text-[#395A8F]">Network Health</span>
+              <span className="text-xs font-semibold text-[var(--text-primary)]">Network Health</span>
             </div>
-            <span className="text-xs font-bold text-emerald-600">99.9%</span>
+            <span className="text-xs font-semibold text-emerald-600">99.9%</span>
           </div>
-          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-[var(--surface-border)] rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500 w-[99.9%]"></div>
           </div>
         </div>
 
-        <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+        <div className="p-3 rounded-md bg-[var(--surface-1)] border border-[var(--surface-border)]">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-[#248AFF]" />
-              <span className="text-xs font-bold text-[#395A8F]">Global Sync</span>
+              <Globe className="w-4 h-4 text-[var(--brand-600)]" />
+              <span className="text-xs font-semibold text-[var(--text-primary)]">Global Sync</span>
             </div>
-            <span className="text-xs font-bold text-gray-500">2ms latency</span>
+            <span className="text-xs font-semibold text-[var(--text-muted)]">2ms latency</span>
           </div>
-          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#248AFF] w-[85%]"></div>
+          <div className="h-1.5 w-full bg-[var(--surface-border)] rounded-full overflow-hidden">
+            <div className="h-full bg-[var(--brand-600)] w-[85%]"></div>
           </div>
         </div>
       </div>

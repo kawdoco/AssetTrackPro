@@ -66,16 +66,16 @@ export default function ReportsAnalytics() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-0 space-y-4">
 
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-lg">Reports & Analytics</h2>
+        <h2 className="text-base font-semibold text-[var(--text-primary)]">Reports & Analytics</h2>
 
         <div className="flex gap-3">
           <button
             onClick={exportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl text-sm hover:bg-green-700 transition"
+            className="flex items-center gap-2 px-3 py-2 bg-[var(--success-500)] text-white rounded-md text-sm font-semibold hover:opacity-90 transition"
           >
             <FileSpreadsheet className="w-4 h-4" />
             Export CSV
@@ -83,7 +83,7 @@ export default function ReportsAnalytics() {
 
           <button
             onClick={exportPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
+            className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-sm font-semibold hover:bg-[var(--brand-700)] transition"
           >
             <FileDown className="w-4 h-4" />
             Export PDF
@@ -92,27 +92,31 @@ export default function ReportsAnalytics() {
       </div>
 
       {/* Date Filters */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm flex items-center gap-4">
-        <Calendar className="w-5 h-5 text-gray-400" />
+      <div className="bg-[var(--surface-0)] p-3 rounded-lg border border-[var(--surface-border)] shadow-sm flex items-center gap-3">
+        <Calendar className="w-5 h-5 text-[var(--text-muted)]" />
         <input
           type="date"
+          title="Start date"
+          aria-label="Start date"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm"
+          className="border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
         />
-        <span className="text-gray-400">to</span>
+        <span className="text-[var(--text-muted)] text-sm">to</span>
         <input
           type="date"
+          title="End date"
+          aria-label="End date"
           value={endDate}
           onChange={(e) => setEndDate(e.target.value)}
-          className="border rounded-lg px-3 py-2 text-sm"
+          className="border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
         />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <h3 className="text-sm mb-3">Weekly Asset Movements</h3>
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="bg-[var(--surface-0)] p-4 rounded-lg border border-[var(--surface-border)] shadow-sm">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Weekly Asset Movements</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -124,8 +128,8 @@ export default function ReportsAnalytics() {
           </ResponsiveContainer>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm">
-          <h3 className="text-sm mb-3">Zone Activity</h3>
+        <div className="bg-[var(--surface-0)] p-4 rounded-lg border border-[var(--surface-border)] shadow-sm">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-3">Zone Activity</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -139,26 +143,26 @@ export default function ReportsAnalytics() {
       </div>
 
       {/* Asset Movement Report Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <h3 className="px-6 py-4 text-sm border-b">Asset Movement Report</h3>
+      <div className="bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] shadow-sm overflow-hidden">
+        <h3 className="px-4 py-3 text-sm font-semibold text-[var(--text-primary)] border-b border-[var(--surface-border)]">Asset Movement Report</h3>
 
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+          <thead className="bg-[var(--surface-1)] text-[var(--text-muted)] text-[11px] uppercase tracking-wide">
             <tr>
-              <th className="px-6 py-3 text-left">Asset</th>
-              <th className="px-6 py-3 text-left">Employee</th>
-              <th className="px-6 py-3 text-left">Zone</th>
-              <th className="px-6 py-3 text-left">Date</th>
+              <th className="px-4 py-3 text-left">Asset</th>
+              <th className="px-4 py-3 text-left">Employee</th>
+              <th className="px-4 py-3 text-left">Zone</th>
+              <th className="px-4 py-3 text-left">Date</th>
             </tr>
           </thead>
 
           <tbody>
             {movementData.map((m) => (
-              <tr key={m.id} className="border-t hover:bg-gray-50">
-                <td className="px-6 py-4">{m.asset}</td>
-                <td className="px-6 py-4">{m.employee}</td>
-                <td className="px-6 py-4">{m.zone}</td>
-                <td className="px-6 py-4">{m.date}</td>
+              <tr key={m.id} className="border-t border-[var(--surface-border)] hover:bg-[var(--surface-2)]">
+                <td className="px-4 py-3 text-[var(--text-primary)]">{m.asset}</td>
+                <td className="px-4 py-3 text-[var(--text-secondary)]">{m.employee}</td>
+                <td className="px-4 py-3 text-[var(--text-secondary)]">{m.zone}</td>
+                <td className="px-4 py-3 text-[var(--text-muted)]">{m.date}</td>
               </tr>
             ))}
           </tbody>
@@ -166,27 +170,27 @@ export default function ReportsAnalytics() {
       </div>
 
       {/* Overdue Assets Table */}
-      <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-        <h3 className="px-6 py-4 text-sm border-b">Overdue Assets</h3>
+      <div className="bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] shadow-sm overflow-hidden">
+        <h3 className="px-4 py-3 text-sm font-semibold text-[var(--text-primary)] border-b border-[var(--surface-border)]">Overdue Assets</h3>
 
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500">
+          <thead className="bg-[var(--surface-1)] text-[var(--text-muted)] text-[11px] uppercase tracking-wide">
             <tr>
-              <th className="px-6 py-3 text-left">Asset</th>
-              <th className="px-6 py-3 text-left">Assigned To</th>
-              <th className="px-6 py-3 text-left">Due Date</th>
-              <th className="px-6 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-left">Asset</th>
+              <th className="px-4 py-3 text-left">Assigned To</th>
+              <th className="px-4 py-3 text-left">Due Date</th>
+              <th className="px-4 py-3 text-left">Status</th>
             </tr>
           </thead>
 
           <tbody>
             {overdueAssets.map((o) => (
-              <tr key={o.id} className="border-t hover:bg-gray-50">
-                <td className="px-6 py-4">{o.asset}</td>
-                <td className="px-6 py-4">{o.assignedTo}</td>
-                <td className="px-6 py-4">{o.dueDate}</td>
-                <td className="px-6 py-4">
-                  <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs">
+              <tr key={o.id} className="border-t border-[var(--surface-border)] hover:bg-[var(--surface-2)]">
+                <td className="px-4 py-3 text-[var(--text-primary)]">{o.asset}</td>
+                <td className="px-4 py-3 text-[var(--text-secondary)]">{o.assignedTo}</td>
+                <td className="px-4 py-3 text-[var(--text-muted)]">{o.dueDate}</td>
+                <td className="px-4 py-3">
+                  <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-[11px] font-semibold">
                     {o.status}
                   </span>
                 </td>
