@@ -19,6 +19,7 @@ import { Package, Truck, AlertCircle, RefreshCw } from "@/icons/lucideMuiAdapter
 
 import LoginPage from "../auth/LoginPage";
 import { useAuth } from "../hooks/useAuth";
+import { useUiTheme } from "../hooks/useUiTheme";
 
 type ModalType = "asset" | "employee" | "event";
 
@@ -33,7 +34,9 @@ export type TabId =
 
 export default function App() {
   const { isAuthenticated, user, token, loading, login, logout, getCurrentUser } = useAuth();
+  const { themeMode, setThemeMode, densityMode, setDensityMode, resolvedTheme } = useUiTheme();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -98,12 +101,20 @@ export default function App() {
       case "reports":
         return <ReportsAnalytics />;
       case "settings":
-        return <Settings />;
+        return (
+          <Settings
+            themeMode={themeMode}
+            setThemeMode={setThemeMode}
+            densityMode={densityMode}
+            setDensityMode={setDensityMode}
+            resolvedTheme={resolvedTheme}
+          />
+        );
       case "dashboard":
       default:
         return (
-          <div className="max-w-[1600px] mx-auto space-y-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="max-w-[1600px] mx-auto space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
               <StatsCard
                 title="Active Assets"
                 value="14,292"
@@ -146,7 +157,7 @@ export default function App() {
               />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 h-[540px]">
               <div className="lg:col-span-8">
                 <AssetMap />
               </div>
@@ -155,8 +166,8 @@ export default function App() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              <div className="lg:col-span-12 h-[500px]">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
+              <div className="lg:col-span-12 h-[460px]">
                 <AlertsPanel />
               </div>
             </div>
@@ -166,19 +177,29 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex font-sans text-[#395A8F]">
+    <div className="min-h-screen flex font-sans text-[var(--text-primary)] bg-[var(--surface-0)]">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         onLogout={() => {
           logout();
           setActiveTab("dashboard");
         }}
       />
 
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <TopBar />
-        <main className="flex-1 p-8 bg-gray-50/30 overflow-y-auto">
+      <div
+        className={`flex-1 flex flex-col min-h-screen transition-all duration-200 ${
+          isSidebarCollapsed ? "ml-[72px]" : "ml-64"
+        }`}
+      >
+        <TopBar activeTab={activeTab} />
+        <main
+          className={`flex-1 overflow-y-auto ${
+            densityMode === "compact" ? "p-4" : "p-6"
+          } bg-[var(--surface-1)]`}
+        >
           {renderContent()}
         </main>
       </div>
