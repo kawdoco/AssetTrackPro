@@ -112,7 +112,6 @@ export const AssetMap = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-6 left-6 bg-white p-4 rounded-2xl border border-gray-100 shadow-xl z-20 pointer-events-none"
               className="absolute bottom-4 left-4 bg-[var(--surface-0)] p-3 rounded-md border border-[var(--surface-border)] shadow-lg z-20 pointer-events-none"
             >
               <div className="flex items-center gap-3 mb-2">

@@ -45,6 +45,21 @@ const alerts = [
   },
 ];
 
+const alertAccentClassMap = {
+  critical: {
+    container: 'bg-rose-500/15',
+    icon: 'text-rose-500',
+  },
+  warning: {
+    container: 'bg-amber-500/15',
+    icon: 'text-amber-500',
+  },
+  normal: {
+    container: 'bg-blue-500/15',
+    icon: 'text-blue-500',
+  },
+} as const;
+
 export const AlertsPanel = () => {
   const [selectedAlert, setSelectedAlert] = useState<typeof alerts[0] | null>(null);
 
@@ -98,12 +113,17 @@ export const AlertsPanel = () => {
             className="bg-[var(--surface-0)] border border-[var(--surface-border)] rounded-lg overflow-hidden shadow-lg"
           >
             <div className="p-4 h-full flex flex-col">
+              {/** Use semantic classes instead of inline style for lint compliance */}
+              {(() => {
+                const accent = alertAccentClassMap[selectedAlert.type];
+
+                return (
+                  <>
               <div className="flex justify-between items-start mb-4">
                 <div
-                  className="w-10 h-10 rounded-md flex items-center justify-center border border-[var(--surface-border)]"
-                  style={{ backgroundColor: `${selectedAlert.color}15` }}
+                  className={`w-10 h-10 rounded-md flex items-center justify-center border border-[var(--surface-border)] ${accent.container}`}
                 >
-                  <AlertCircle className="w-6 h-6" style={{ color: selectedAlert.color }} />
+                  <AlertCircle className={`w-6 h-6 ${accent.icon}`} />
                 </div>
                 <button
                   onClick={() => setSelectedAlert(null)}
@@ -158,6 +178,9 @@ export const AlertsPanel = () => {
                   Investigate
                 </button>
               </div>
+                  </>
+                );
+              })()}
             </div>
           </motion.div>
         )}

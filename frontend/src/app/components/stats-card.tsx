@@ -13,7 +13,16 @@ interface StatsCardProps {
   onClick?: () => void;
 }
 
+const statusColorClassMap: Record<string, string> = {
+  '#10b981': 'bg-emerald-500',
+  '#248aff': 'bg-[var(--brand-600)]',
+  '#f43f5e': 'bg-rose-500',
+};
+
 export const StatsCard = ({ title, value, subtext, trend, trendType, icon: Icon, statusColor = "#248AFF", onClick }: StatsCardProps) => {
+  const normalizedStatusColor = statusColor.toLowerCase();
+  const statusDotClass = statusColorClassMap[normalizedStatusColor] ?? 'bg-[var(--brand-600)]';
+
   return (
     <motion.div
       whileHover={{ y: -2, boxShadow: '0 8px 18px -8px rgba(15, 23, 42, 0.24)' }}
@@ -36,7 +45,7 @@ export const StatsCard = ({ title, value, subtext, trend, trendType, icon: Icon,
 
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: statusColor }}></div>
+          <div className={`w-2 h-2 rounded-full ${statusDotClass}`}></div>
           <h3 className="text-2xl font-semibold text-[var(--text-primary)] tracking-tight">{value}</h3>
         </div>
         <p className="text-sm font-semibold text-[var(--text-secondary)] mb-0.5">{title}</p>
