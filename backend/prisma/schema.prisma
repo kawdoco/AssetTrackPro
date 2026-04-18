@@ -14,7 +14,7 @@ datasource db {
 // ORGANIZATION (Multi-tenant root)
 // ============================================================================
 model Organization {
-  id                 String   @id @default(cuid())
+  id                 Int      @id @default(autoincrement())
   name               String   @unique
   industry_type      String?
   created_at         DateTime @default(now())
@@ -32,8 +32,8 @@ model Organization {
 // BRANCH (Office locations)
 // ============================================================================
 model Branch {
-  id                 String   @id @default(cuid())
-  organization_id    String
+  id                 Int      @id @default(autoincrement())
+  organization_id    Int
   name               String
   city               String
   status             String   @default("ACTIVE") // ACTIVE, INACTIVE
@@ -52,8 +52,8 @@ model Branch {
 // BUILDING (Physical structures)
 // ============================================================================
 model Building {
-  id                 String   @id @default(cuid())
-  branch_id          String
+  id                 Int      @id @default(autoincrement())
+  branch_id          Int
   name               String
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
@@ -70,8 +70,8 @@ model Building {
 // ZONE (Logical areas: STORAGE, OFFICE, EXIT, SECURE)
 // ============================================================================
 model Zone {
-  id                 String   @id @default(cuid())
-  building_id        String
+  id                 Int      @id @default(autoincrement())
+  building_id        Int
   zone_name          String
   zone_type          String   // STORAGE, OFFICE, EXIT, SECURE
   description        String?
@@ -93,8 +93,8 @@ model Zone {
 // GATE (RFID reader locations)
 // ============================================================================
 model Gate {
-  id                 String   @id @default(cuid())
-  zone_id            String
+  id                 Int      @id @default(autoincrement())
+  zone_id            Int
   gate_name          String
   direction          String   // ENTRY, EXIT, BOTH
   reader_model       String?  // IMPINJ_R700, ZEBRA_FX, etc.
@@ -114,8 +114,8 @@ model Gate {
 // EMPLOYEE (Staff members)
 // ============================================================================
 model Employee {
-  id                 String   @id @default(cuid())
-  organization_id    String
+  id                 Int      @id @default(autoincrement())
+  organization_id    Int
   employee_code      String
   name               String
   email              String?
@@ -135,14 +135,14 @@ model Employee {
 // ASSET (RFID-tagged devices)
 // ============================================================================
 model Asset {
-  id                 String   @id @default(cuid())
-  organization_id    String
+  id                 Int      @id @default(autoincrement())
+  organization_id    Int
   asset_tag_uid      String   @unique // EPC Gen2 RFID or UUID
   asset_type         String   // LAPTOP, TABLET, PHONE, MONITOR, OTHER
   model              String?
   serial_number      String?
   status             String   @default("ACTIVE") // ACTIVE, LOST, RECOVERED, RETIRED
-  last_seen_zone_id  String?
+  last_seen_zone_id  Int?
   last_seen_time     DateTime?
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
@@ -164,9 +164,9 @@ model Asset {
 // ASSET_ASSIGNMENT (Who has what - history matters)
 // ============================================================================
 model AssetAssignment {
-  id                 String   @id @default(cuid())
-  asset_id           String
-  employee_id        String
+  id                 Int      @id @default(autoincrement())
+  asset_id           Int
+  employee_id        Int
   assigned_at        DateTime @default(now())
   returned_at        DateTime? // Null = still assigned
   notes              String?
@@ -188,11 +188,11 @@ model AssetAssignment {
 // CRITICAL: NEVER UPDATE OR DELETE! Only INSERT!
 // ============================================================================
 model MovementEvent {
-  id                 String   @id @default(cuid())
-  asset_id           String
-  gate_id            String
-  zone_from_id       String
-  zone_to_id         String
+  id                 Int      @id @default(autoincrement())
+  asset_id           Int
+  gate_id            Int
+  zone_from_id       Int
+  zone_to_id         Int
   event_type         String   // ENTER, EXIT
   event_time         DateTime @default(now())
   trigger_source     String   // RFID, SIMULATED, MANUAL
@@ -219,9 +219,9 @@ model MovementEvent {
 // ALERT / INCIDENT (Security incidents and violations)
 // ============================================================================
 model Alert {
-  id                 String   @id @default(cuid())
-  asset_id           String
-  event_id           String?  // Can be null for non-event-triggered alerts
+  id                 Int      @id @default(autoincrement())
+  asset_id           Int
+  event_id           Int?     // Can be null for non-event-triggered alerts
   alert_type         String   // UNAUTHORIZED_EXIT, OVERDUE_RETURN, LOST_ASSET, ZONE_VIOLATION, TAMPERED_TAG
   severity           String   // CRITICAL, HIGH, MEDIUM, LOW
   message            String
@@ -246,12 +246,12 @@ model Alert {
 // USER / AUTH (For login and system access)
 // ============================================================================
 model User {
-  id                 String   @id @default(cuid())
+  id                 Int      @id @default(autoincrement())
   email              String   @unique
   password           String   // Hashed with bcryptjs
   full_name          String
   role               String   @default("VIEWER") // ADMIN, MANAGER, SECURITY, VIEWER
-  organization_id    String   // Even users belong to organizations
+  organization_id    Int?      // Even users belong to organizations
   is_active          Boolean  @default(true)
   last_login         DateTime?
   created_at         DateTime @default(now())

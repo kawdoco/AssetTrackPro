@@ -36,37 +36,48 @@ export const ensureSeedUser = async () => {
   const fullName = process.env.SEED_ADMIN_FULL_NAME || 'System Administrator';
   const role = process.env.SEED_ADMIN_ROLE || 'ADMIN';
   const orgName = process.env.SEED_ORG_NAME || 'Default Organization';
+  const seedAdminOrgNull = toBool(process.env.SEED_ADMIN_ORG_NULL, false);
 
   const existingUserCount = await prisma.user.count({
     where: { email },
   });
 
   if (existingUserCount > 0) {
-    logSeedInfo({ created: false, email, password, role, orgName });
+    logSeedInfo({
+      created: false,
+      email,
+      password,
+      role,
+      orgName: seedAdminOrgNull ? 'NULL' : orgName,
+    });
     return;
   }
 
-  let organization = await prisma.organization.findFirst({
-    where: { name: orgName },
-    select: { id: true, name: true },
-  });
+  let organization = null;
 
-  if (!organization) {
-    await prisma.organization.createMany({
-      data: {
-        name: orgName,
-      },
-      skipDuplicates: true,
-    });
-
+  if (!seedAdminOrgNull) {
     organization = await prisma.organization.findFirst({
       where: { name: orgName },
       select: { id: true, name: true },
     });
-  }
 
-  if (!organization) {
-    throw new Error(`Failed to ensure seed organization: ${orgName}`);
+    if (!organization) {
+      await prisma.organization.createMany({
+        data: {
+          name: orgName,
+        },
+        skipDuplicates: true,
+      });
+
+      organization = await prisma.organization.findFirst({
+        where: { name: orgName },
+        select: { id: true, name: true },
+      });
+    }
+
+    if (!organization) {
+      throw new Error(`Failed to ensure seed organization: ${orgName}`);
+    }
   }
 
   const hashedPassword = await bcryptjs.hash(password, 10);
@@ -77,7 +88,7 @@ export const ensureSeedUser = async () => {
       password: hashedPassword,
       full_name: fullName,
       role,
-      organization_id: organization.id,
+      organization_id: organization?.id ?? null,
       is_active: true,
     },
     skipDuplicates: true,
@@ -91,5 +102,11 @@ export const ensureSeedUser = async () => {
     throw new Error(`Failed to ensure seed user: ${email}`);
   }
 
-  logSeedInfo({ created: true, email, password, role, orgName: organization.name });
+  logSeedInfo({
+    created: true,
+    email,
+    password,
+    role,
+    orgName: organization?.name ?? 'NULL',
+  });
 };

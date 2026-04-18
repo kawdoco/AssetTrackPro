@@ -16,7 +16,8 @@ export const registerUser = async (userData) => {
 
   // Check if user already exists
   const existingUser = await prisma.user.findUnique({
-    where: { email }
+    where: { email },
+    select: { id: true },
   });
 
   if (existingUser) {
@@ -33,15 +34,15 @@ export const registerUser = async (userData) => {
       password: hashedPassword,
       full_name,
       organization_id,
-      role: 'VIEWER' // Default role
+      role: 'VIEWER',
     },
     select: {
       id: true,
       email: true,
       full_name: true,
       role: true,
-      organization_id: true
-    }
+      organization_id: true,
+    },
   });
 
   // Generate JWT token
@@ -75,8 +76,8 @@ export const loginUser = async (email, password) => {
       full_name: true,
       role: true,
       organization_id: true,
-      is_active: true
-    }
+      is_active: true,
+    },
   });
 
   if (!user) {
@@ -97,7 +98,7 @@ export const loginUser = async (email, password) => {
   // Update last login
   await prisma.user.update({
     where: { id: user.id },
-    data: { last_login: new Date() }
+    data: { last_login: new Date() },
   });
 
   // Generate JWT token
@@ -132,12 +133,18 @@ export const verifyUserToken = (token) => {
 
 /**
  * Get user by ID
- * @param {string} userId - User ID
+ * @param {number|string} userId - User ID
  * @returns {Object} User data
  */
 export const getUserById = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
+  const id = Number(userId);
+
+  if (!Number.isInteger(id)) {
+    return null;
+  }
+
+  return prisma.user.findUnique({
+    where: { id },
     select: {
       id: true,
       email: true,
@@ -146,24 +153,28 @@ export const getUserById = async (userId) => {
       organization_id: true,
       is_active: true,
       last_login: true,
-      created_at: true
-    }
+      created_at: true,
+    },
   });
-
-  return user;
 };
 
 /**
  * Update user password
- * @param {string} userId - User ID
+ * @param {number|string} userId - User ID
  * @param {string} currentPassword - Current password (plain text)
  * @param {string} newPassword - New password (plain text)
  * @returns {Object} Success message
  */
 export const updatePassword = async (userId, currentPassword, newPassword) => {
+  const id = Number(userId);
+
+  if (!Number.isInteger(id)) {
+    throw new Error('User not found');
+  }
+
   const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { password: true }
+    where: { id },
+    select: { password: true },
   });
 
   if (!user) {
@@ -182,8 +193,8 @@ export const updatePassword = async (userId, currentPassword, newPassword) => {
 
   // Update password
   await prisma.user.update({
-    where: { id: userId },
-    data: { password: hashedPassword }
+    where: { id },
+    data: { password: hashedPassword },
   });
 
   return {

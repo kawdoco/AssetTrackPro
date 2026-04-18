@@ -1,5 +1,14 @@
 import prisma from '../config/prisma.js';
 
+const toIntOrNull = (value) => {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) ? parsed : null;
+};
+
 const assetSelect = {
   id: true,
   organization_id: true,
@@ -22,8 +31,14 @@ const assetSelect = {
 };
 
 export const listAssets = async (organizationId, filters = {}) => {
+  const normalizedOrganizationId = toIntOrNull(organizationId);
+
+  if (normalizedOrganizationId === null) {
+    return [];
+  }
+
   const where = {
-    organization_id: organizationId,
+    organization_id: normalizedOrganizationId,
   };
 
   if (filters.status) {
@@ -52,24 +67,37 @@ export const listAssets = async (organizationId, filters = {}) => {
 };
 
 export const getAssetById = async (id, organizationId) => {
+  const normalizedId = toIntOrNull(id);
+  const normalizedOrganizationId = toIntOrNull(organizationId);
+
+  if (normalizedId === null || normalizedOrganizationId === null) {
+    return null;
+  }
+
   return prisma.asset.findFirst({
     where: {
-      id,
-      organization_id: organizationId,
+      id: normalizedId,
+      organization_id: normalizedOrganizationId,
     },
     select: assetSelect,
   });
 };
 
 export const createAsset = async (organizationId, assetData) => {
+  const normalizedOrganizationId = toIntOrNull(organizationId);
+
+  if (normalizedOrganizationId === null) {
+    throw new Error('Invalid organization_id');
+  }
+
   const data = {
-    organization_id: organizationId,
+    organization_id: normalizedOrganizationId,
     asset_tag_uid: assetData.asset_tag_uid,
     asset_type: assetData.asset_type,
     model: assetData.model || null,
     serial_number: assetData.serial_number || null,
     status: assetData.status || 'ACTIVE',
-    last_seen_zone_id: assetData.last_seen_zone_id || null,
+    last_seen_zone_id: toIntOrNull(assetData.last_seen_zone_id),
     last_seen_time: assetData.last_seen_time ? new Date(assetData.last_seen_time) : null,
   };
 
@@ -80,10 +108,17 @@ export const createAsset = async (organizationId, assetData) => {
 };
 
 export const updateAsset = async (id, organizationId, assetData) => {
+  const normalizedId = toIntOrNull(id);
+  const normalizedOrganizationId = toIntOrNull(organizationId);
+
+  if (normalizedId === null || normalizedOrganizationId === null) {
+    return null;
+  }
+
   const existingAsset = await prisma.asset.findFirst({
     where: {
-      id,
-      organization_id: organizationId,
+      id: normalizedId,
+      organization_id: normalizedOrganizationId,
     },
     select: { id: true },
   });
@@ -99,23 +134,32 @@ export const updateAsset = async (id, organizationId, assetData) => {
   if (assetData.model !== undefined) data.model = assetData.model || null;
   if (assetData.serial_number !== undefined) data.serial_number = assetData.serial_number || null;
   if (assetData.status !== undefined) data.status = assetData.status;
-  if (assetData.last_seen_zone_id !== undefined) data.last_seen_zone_id = assetData.last_seen_zone_id || null;
+  if (assetData.last_seen_zone_id !== undefined) {
+    data.last_seen_zone_id = toIntOrNull(assetData.last_seen_zone_id);
+  }
   if (assetData.last_seen_time !== undefined) {
     data.last_seen_time = assetData.last_seen_time ? new Date(assetData.last_seen_time) : null;
   }
 
   return prisma.asset.update({
-    where: { id },
+    where: { id: normalizedId },
     data,
     select: assetSelect,
   });
 };
 
 export const deleteAsset = async (id, organizationId) => {
+  const normalizedId = toIntOrNull(id);
+  const normalizedOrganizationId = toIntOrNull(organizationId);
+
+  if (normalizedId === null || normalizedOrganizationId === null) {
+    return null;
+  }
+
   const existingAsset = await prisma.asset.findFirst({
     where: {
-      id,
-      organization_id: organizationId,
+      id: normalizedId,
+      organization_id: normalizedOrganizationId,
     },
     select: { id: true },
   });
@@ -125,7 +169,7 @@ export const deleteAsset = async (id, organizationId) => {
   }
 
   await prisma.asset.delete({
-    where: { id },
+    where: { id: normalizedId },
   });
 
   return { success: true, message: 'Asset deleted successfully' };

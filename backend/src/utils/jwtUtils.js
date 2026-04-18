@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 /**
  * Generate JWT token for user
  * @param {Object} payload - Data to encode in token
- * @param {string} payload.user_id - User ID
+ * @param {number} payload.user_id - User ID
  * @param {string} payload.email - User email
  * @param {string} payload.organization_id - Organization ID
  * @param {string} payload.role - User role

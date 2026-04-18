@@ -3,11 +3,19 @@ import * as authService from '../services/authService.js';
 export const register = async (req, res) => {
   try {
     const { email, password, full_name, organization_id } = req.body;
+    const normalizedOrganizationId = Number(organization_id);
 
     if (!email || !password || !full_name || !organization_id) {
       return res.status(400).json({
         success: false,
         message: 'Email, password, full_name, and organization_id are required'
+      });
+    }
+
+    if (!Number.isInteger(normalizedOrganizationId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'organization_id must be an integer'
       });
     }
 
@@ -30,7 +38,7 @@ export const register = async (req, res) => {
       email,
       password,
       full_name,
-      organization_id
+      organization_id: normalizedOrganizationId
     });
 
     res.status(201).json(result);
