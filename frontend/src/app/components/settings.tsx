@@ -5,11 +5,13 @@ import {
   Bell,
   Building2,
   Save,
-  Laptop,
+  Monitor,
   Activity,
   Globe,
   GripVerticalIcon,
   Maximize,
+  Sun,
+  Moon,
 } from "@/icons/lucideMuiAdapter";
 import type { DensityMode, ThemeMode } from "../../hooks/useUiTheme";
 
@@ -187,19 +189,19 @@ export default function Settings({
                 active={themeMode === "auto"}
                 onClick={() => setThemeMode("auto")}
                 label="Auto"
-                icon={<Laptop className="w-4 h-4" />}
+                icon={<Monitor className="w-4 h-4" />}
               />
               <SegmentButton
                 active={themeMode === "light"}
                 onClick={() => setThemeMode("light")}
                 label="Light"
-                icon={<Globe className="w-4 h-4" />}
+                icon={<Sun className="w-4 h-4" />}
               />
               <SegmentButton
                 active={themeMode === "dark"}
                 onClick={() => setThemeMode("dark")}
                 label="Dark"
-                icon={<Activity className="w-4 h-4" />}
+                icon={<Moon className="w-4 h-4" />}
               />
             </div>
 

@@ -3,6 +3,8 @@ import type React from 'react';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
@@ -98,7 +100,7 @@ export const Globe = PublicIcon;
 export const GripVerticalIcon = DragIndicatorIcon;
 export const History = HistoryIcon;
 export const Info = InfoOutlinedIcon;
-export const Laptop = LaptopMacIcon;
+export const Monitor = LaptopMacIcon;
 export const LayoutDashboard = DashboardIcon;
 export const Lock = LockOutlinedIcon;
 export const Mail = MailOutlineIcon;
@@ -107,6 +109,7 @@ export const Maximize = OpenInFullIcon;
 export const MinusIcon = RemoveIcon;
 export const MoreHorizontal = MoreHorizIcon;
 export const MousePointer2 = MouseIcon;
+export const Moon = DarkModeIcon;
 export const Package = Inventory2Icon;
 export const PanelLeftIcon = ViewSidebarIcon;
 export const Plus = AddIcon;
@@ -117,6 +120,7 @@ export const SearchIcon = SearchIconMui;
 export const Settings = SettingsIcon;
 export const Shield = ShieldIcon;
 export const ShieldCheck = VerifiedUserIcon;
+export const Sun = LightModeIcon;
 export const Tag = SellIcon;
 export const TrendingDown = TrendingDownIcon;
 export const TrendingUp = TrendingUpIcon;
@@ -170,7 +174,7 @@ export default {
   GripVerticalIcon,
   History,
   Info,
-  Laptop,
+  Monitor,
   LayoutDashboard,
   Lock,
   Mail,
