@@ -12,6 +12,3 @@ AssetAssignment - Dilshan
 MovementEvent - Kaveen
 Alert - 
 User - 
-
-Kaveen, Poorna, Ruvinari, Ishara, Avishka
-John, Isuru, Mihashi, Isuru, Tharaka, Pavithra
