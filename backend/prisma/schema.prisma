@@ -120,6 +120,7 @@ model Employee {
   name               String
   email              String?
   status             String   @default("ACTIVE") // ACTIVE, RESIGNED, LEAVE
+  is_active          Boolean  @default(true)
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -128,6 +129,7 @@ model Employee {
   asset_assignments  AssetAssignment[]
 
   @@unique([organization_id, employee_code])
+  @@index([is_active])
   @@map("employee")
 }
 

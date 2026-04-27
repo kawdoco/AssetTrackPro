@@ -16,6 +16,7 @@ const employeeSelect = {
   name: true,
   email: true,
   status: true,
+  is_active: true,
   created_at: true,
   updated_at: true,
   organization: {
@@ -84,6 +85,10 @@ export const listEmployees = async (user, query = {}) => {
     ];
   }
 
+  if (query.is_active !== undefined) {
+    where.is_active = String(query.is_active).toLowerCase() === 'true';
+  }
+
   return prisma.employee.findMany({
     where,
     select: employeeSelect,
@@ -109,6 +114,92 @@ export const createEmployee = async (user, payload) => {
       name: payload.name,
       email: payload.email || null,
       status: payload.status || 'ACTIVE',
+      is_active: true,
+    },
+    select: employeeSelect,
+  });
+};
+
+export const updateEmployee = async (id, user, payload) => {
+  const employeeId = toIntOrNull(id);
+  const scopeOrgId = scopedOrganizationId(user);
+
+  if (employeeId === null) {
+    return null;
+  }
+
+  const existing = await prisma.employee.findFirst({
+    where: {
+      id: employeeId,
+      ...(scopeOrgId !== null ? { organization_id: scopeOrgId } : {}),
+    },
+    select: {
+      id: true,
+      is_active: true,
+      status: true,
+    },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  const data = {};
+
+  if (payload.organization_id !== undefined && scopeOrgId === null) {
+    const updatedOrgId = toIntOrNull(payload.organization_id);
+    if (updatedOrgId !== null) {
+      data.organization_id = updatedOrgId;
+    }
+  }
+
+  if (payload.employee_code !== undefined) data.employee_code = payload.employee_code;
+  if (payload.name !== undefined) data.name = payload.name;
+  if (payload.email !== undefined) data.email = payload.email || null;
+
+  if (payload.status !== undefined) {
+    data.status = payload.status;
+  }
+
+  if (payload.is_active !== undefined) {
+    data.is_active = Boolean(payload.is_active);
+    if (payload.status === undefined) {
+      data.status = data.is_active ? 'ACTIVE' : 'INACTIVE';
+    }
+  }
+
+  return prisma.employee.update({
+    where: { id: employeeId },
+    data,
+    select: employeeSelect,
+  });
+};
+
+export const softDeleteEmployee = async (id, user) => {
+  const employeeId = toIntOrNull(id);
+  const scopeOrgId = scopedOrganizationId(user);
+
+  if (employeeId === null) {
+    return null;
+  }
+
+  const existing = await prisma.employee.findFirst({
+    where: {
+      id: employeeId,
+      ...(scopeOrgId !== null ? { organization_id: scopeOrgId } : {}),
+    },
+    select: { id: true },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  return prisma.employee.update({
+    where: { id: employeeId },
+    data: {
+      is_active: false,
+      status: 'INACTIVE',
     },
     select: employeeSelect,
   });

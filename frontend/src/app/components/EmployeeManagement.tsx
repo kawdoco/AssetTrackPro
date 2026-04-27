@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
@@ -6,8 +6,10 @@ import { motion, AnimatePresence } from "motion/react";
 import { Plus, Search, User, Building2, X } from "@/icons/lucideMuiAdapter";
 import {
   createEmployee,
+  deleteEmployee,
   fetchEmployeeOrganizations,
   fetchEmployees,
+  updateEmployee,
   type EmployeeCreatePayload,
   type EmployeeRecord,
   type OrganizationOption,
@@ -34,20 +36,35 @@ export const EmployeeManagement = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [showAddEmployeePanel, setShowAddEmployeePanel] = useState(false);
+  const [showSaveConfirmPopup, setShowSaveConfirmPopup] = useState(false);
+  const [showDeleteConfirmPopup, setShowDeleteConfirmPopup] = useState(false);
   const [selectedEmployee, setSelectedEmployee] =
     useState<EmployeeRecord | null>(null);
+  const [editingEmployee, setEditingEmployee] = useState<EmployeeRecord | null>(
+    null,
+  );
+  const [employeeToDelete, setEmployeeToDelete] =
+    useState<EmployeeRecord | null>(null);
+  const saveConfirmResolverRef = useRef<((value: boolean) => void) | null>(
+    null,
+  );
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
   const initialFormValues: EmployeeCreatePayload = useMemo(
     () => ({
-      organization_id: organizations[0] ? String(organizations[0].id) : "",
-      employee_code: "",
-      name: "",
-      email: "",
-      status: "ACTIVE",
+      organization_id: editingEmployee
+        ? String(editingEmployee.organization_id)
+        : organizations[0]
+          ? String(organizations[0].id)
+          : "",
+      employee_code: editingEmployee?.employee_code || "",
+      name: editingEmployee?.name || "",
+      email: editingEmployee?.email || "",
+      status: editingEmployee?.status || "ACTIVE",
+      is_active: editingEmployee?.is_active ?? true,
     }),
-    [organizations],
+    [editingEmployee, organizations],
   );
 
   const loadEmployees = async (searchTerm = "") => {
@@ -89,12 +106,77 @@ export const EmployeeManagement = () => {
     );
   };
 
+  const requestSaveConfirmation = () =>
+    new Promise<boolean>((resolve) => {
+      saveConfirmResolverRef.current = resolve;
+      setShowSaveConfirmPopup(true);
+    });
+
+  const handleSaveConfirm = () => {
+    setShowSaveConfirmPopup(false);
+    saveConfirmResolverRef.current?.(true);
+    saveConfirmResolverRef.current = null;
+  };
+
+  const handleSaveCancel = () => {
+    setShowSaveConfirmPopup(false);
+    saveConfirmResolverRef.current?.(false);
+    saveConfirmResolverRef.current = null;
+  };
+
+  const handleOpenAddPanel = () => {
+    setSelectedEmployee(null);
+    setEditingEmployee(null);
+    setShowAddEmployeePanel(true);
+  };
+
+  const handleOpenEditPanel = (employee: EmployeeRecord) => {
+    setEditingEmployee(employee);
+    setSelectedEmployee(employee);
+    setShowAddEmployeePanel(true);
+  };
+
+  const handlePromptDelete = (employee: EmployeeRecord) => {
+    setEmployeeToDelete(employee);
+    setShowDeleteConfirmPopup(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!employeeToDelete) return;
+
+    try {
+      await deleteEmployee(employeeToDelete.id);
+      toast.success("Employee deactivated successfully");
+      await loadEmployees(search);
+
+      if (selectedEmployee?.id === employeeToDelete.id) {
+        setSelectedEmployee({
+          ...selectedEmployee,
+          is_active: false,
+          status: "INACTIVE",
+        });
+      }
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete employee",
+      );
+    } finally {
+      setShowDeleteConfirmPopup(false);
+      setEmployeeToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirmPopup(false);
+    setEmployeeToDelete(null);
+  };
+
   return (
     <div className="flex h-full gap-4 overflow-hidden">
       {/* LEFT TABLE SECTION */}
       <div
         className={`flex-1 flex flex-col transition-all duration-500 ${
-          selectedEmployee ? "w-2/3" : "w-full"
+          selectedEmployee || showAddEmployeePanel ? "w-2/3" : "w-full"
         }`}
       >
         <div className="bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] shadow-sm flex-1 flex flex-col overflow-hidden">
@@ -112,10 +194,7 @@ export const EmployeeManagement = () => {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedEmployee(null);
-                  setShowAddEmployeePanel(true);
-                }}
+                onClick={handleOpenAddPanel}
                 className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-sm font-semibold hover:bg-[var(--brand-700)] transition-all"
               >
                 <Plus className="w-4 h-4" />
@@ -156,10 +235,11 @@ export const EmployeeManagement = () => {
                 <tr>
                   <th className="px-4 py-3"></th>
                   <th className="px-4 py-3">Employee</th>
-                  <th className="px-4 py-3">Department</th>
+                  <th className="px-4 py-3">Employee Code</th>
                   <th className="px-4 py-3">Status</th>
-                  <th className="px-4 py-3">Last Seen</th>
-                  <th className="px-4 py-3">Assets</th>
+                  <th className="px-4 py-3">Organization</th>
+                  <th className="px-4 py-3">Created</th>
+                  <th className="px-4 py-3">Actions</th>
                 </tr>
               </thead>
 
@@ -167,7 +247,7 @@ export const EmployeeManagement = () => {
                 {loading && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-8 text-center text-sm text-[var(--text-muted)]"
                     >
                       Loading employees...
@@ -179,7 +259,7 @@ export const EmployeeManagement = () => {
                   employeesData.map((emp) => (
                     <tr
                       key={emp.id}
-                      className="hover:bg-[var(--surface-2)] cursor-pointer transition"
+                      className={`hover:bg-[var(--surface-2)] cursor-pointer transition ${!emp.is_active ? "opacity-70" : ""}`}
                       onClick={() => setSelectedEmployee(emp)}
                     >
                       <td className="px-4 py-3">
@@ -229,13 +309,43 @@ export const EmployeeManagement = () => {
                       <td className="px-4 py-3 text-xs font-semibold text-[var(--text-primary)]">
                         {new Date(emp.created_at).toLocaleDateString()}
                       </td>
+
+                      <td className="px-4 py-3">
+                        <div
+                          className="flex items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => setSelectedEmployee(emp)}
+                            className="px-2.5 py-1.5 rounded-md border border-[var(--surface-border)] text-[10px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                          >
+                            View
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenEditPanel(emp)}
+                            className="px-2.5 py-1.5 rounded-md border border-[var(--surface-border)] text-[10px] font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handlePromptDelete(emp)}
+                            disabled={!emp.is_active}
+                            className="px-2.5 py-1.5 rounded-md bg-[var(--danger-500)] text-white text-[10px] font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
 
                 {!loading && employeesData.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-8 text-center text-sm text-[var(--text-muted)]"
                     >
                       No employees found.
@@ -288,14 +398,25 @@ export const EmployeeManagement = () => {
             </div>
 
             <div className="p-4 grid grid-cols-2 gap-3 border-t border-[var(--surface-border)]">
-              <button className="py-2 rounded-md border border-[var(--surface-border)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]">
-                Employee Code
+              <button
+                type="button"
+                onClick={() => handleOpenEditPanel(selectedEmployee)}
+                className="py-2 rounded-md border border-[var(--surface-border)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+              >
+                Edit Employee
               </button>
               <button className="py-2 rounded-md border border-[var(--surface-border)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]">
                 {selectedEmployee.employee_code}
               </button>
-              <button className="col-span-2 py-2 rounded-md bg-[var(--brand-600)] text-white text-xs font-semibold hover:opacity-90">
-                Status: {selectedEmployee.status}
+              <button
+                type="button"
+                onClick={() => handlePromptDelete(selectedEmployee)}
+                disabled={!selectedEmployee.is_active}
+                className="col-span-2 py-2 rounded-md bg-[var(--danger-500)] text-white text-xs font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {selectedEmployee.is_active
+                  ? "Delete (Soft Deactivate)"
+                  : "Already Inactive - Use Edit to Reactivate"}
               </button>
             </div>
           </motion.div>
@@ -310,7 +431,10 @@ export const EmployeeManagement = () => {
           >
             <div className="p-5 border-b border-[var(--surface-border)] relative">
               <button
-                onClick={() => setShowAddEmployeePanel(false)}
+                onClick={() => {
+                  setShowAddEmployeePanel(false);
+                  setEditingEmployee(null);
+                }}
                 title="Close add employee panel"
                 aria-label="Close add employee panel"
                 className="absolute top-4 right-4 p-1.5 hover:bg-[var(--surface-2)] rounded-full"
@@ -319,10 +443,12 @@ export const EmployeeManagement = () => {
               </button>
 
               <h3 className="text-lg font-semibold text-[var(--text-primary)]">
-                Add Employee
+                {editingEmployee ? "Edit Employee" : "Add Employee"}
               </h3>
               <p className="text-xs text-[var(--text-muted)]">
-                Create a new employee record
+                {editingEmployee
+                  ? "Update employee details and active state"
+                  : "Create a new employee record"}
               </p>
             </div>
 
@@ -331,16 +457,30 @@ export const EmployeeManagement = () => {
               initialValues={initialFormValues}
               validationSchema={employeeSchema}
               onSubmit={async (values, helpers) => {
+                const confirmed = await requestSaveConfirmation();
+
+                if (!confirmed) {
+                  helpers.setSubmitting(false);
+                  return;
+                }
+
                 try {
-                  await createEmployee(values);
-                  toast.success("Employee created successfully");
+                  if (editingEmployee) {
+                    await updateEmployee(editingEmployee.id, values);
+                    toast.success("Employee updated successfully");
+                  } else {
+                    await createEmployee(values);
+                    toast.success("Employee created successfully");
+                  }
+
                   helpers.resetForm({ values: initialFormValues });
                   await loadEmployees(search);
                   setShowAddEmployeePanel(false);
+                  setEditingEmployee(null);
                 } catch (error: any) {
                   toast.error(
                     error?.response?.data?.message ||
-                      "Failed to create employee",
+                      `Failed to ${editingEmployee ? "update" : "create"} employee`,
                   );
                 } finally {
                   helpers.setSubmitting(false);
@@ -353,6 +493,7 @@ export const EmployeeManagement = () => {
                 touched,
                 handleChange,
                 handleBlur,
+                setFieldValue,
                 isSubmitting,
               }) => (
                 <Form className="p-5 space-y-4">
@@ -462,16 +603,118 @@ export const EmployeeManagement = () => {
                     )}
                   </div>
 
+                  <div className="flex items-center justify-between rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2">
+                    <label className="text-xs text-[var(--text-primary)] font-semibold">
+                      Is Active
+                    </label>
+                    <input
+                      type="checkbox"
+                      checked={Boolean(values.is_active)}
+                      onChange={(e) =>
+                        setFieldValue("is_active", e.target.checked)
+                      }
+                      className="h-4 w-4 accent-[var(--brand-600)]"
+                    />
+                  </div>
+
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     className="w-full py-2 rounded-md bg-[var(--brand-600)] text-white text-xs font-semibold hover:bg-[var(--brand-700)] disabled:opacity-60"
                   >
-                    {isSubmitting ? "Saving..." : "Save Employee"}
+                    {isSubmitting
+                      ? "Saving..."
+                      : editingEmployee
+                        ? "Update Employee"
+                        : "Save Employee"}
                   </button>
                 </Form>
               )}
             </Formik>
+          </motion.div>
+        )}
+
+        {showSaveConfirmPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[360px] rounded-lg border border-[var(--surface-border)] bg-[var(--surface-0)] shadow-2xl"
+            >
+              <div className="px-5 py-4 border-b border-[var(--surface-border)]">
+                <h4 className="text-sm font-semibold text-[var(--text-primary)]">
+                  Confirm Save
+                </h4>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  Are you sure you want to save this employee?
+                </p>
+              </div>
+
+              <div className="p-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleSaveCancel}
+                  className="py-2 rounded-md border border-[var(--surface-border)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveConfirm}
+                  className="py-2 rounded-md bg-[var(--brand-600)] text-white text-xs font-semibold hover:bg-[var(--brand-700)]"
+                >
+                  Yes, Save
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {showDeleteConfirmPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[1px] flex items-center justify-center px-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-[360px] rounded-lg border border-[var(--surface-border)] bg-[var(--surface-0)] shadow-2xl"
+            >
+              <div className="px-5 py-4 border-b border-[var(--surface-border)]">
+                <h4 className="text-sm font-semibold text-[var(--text-primary)]">
+                  Confirm Delete
+                </h4>
+                <p className="mt-1 text-xs text-[var(--text-muted)]">
+                  This will set employee as inactive. Continue?
+                </p>
+              </div>
+
+              <div className="p-4 grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={handleDeleteCancel}
+                  className="py-2 rounded-md border border-[var(--surface-border)] text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteConfirm()}
+                  className="py-2 rounded-md bg-[var(--danger-500)] text-white text-xs font-semibold hover:opacity-90"
+                >
+                  Yes, Delete
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

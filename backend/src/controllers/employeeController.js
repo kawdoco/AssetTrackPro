@@ -61,3 +61,55 @@ export const createEmployee = async (req, res) => {
     });
   }
 };
+
+export const updateEmployee = async (req, res) => {
+  try {
+    const employee = await employeeService.updateEmployee(req.params.id, req.user, req.body);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Employee updated successfully',
+      data: employee,
+    });
+  } catch (error) {
+    const duplicateCode = error.code === 'P2002';
+
+    res.status(duplicateCode ? 409 : 400).json({
+      success: false,
+      message: duplicateCode
+        ? 'employee_code already exists for this organization'
+        : error.message || 'Failed to update employee',
+    });
+  }
+};
+
+export const deleteEmployee = async (req, res) => {
+  try {
+    const employee = await employeeService.softDeleteEmployee(req.params.id, req.user);
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: 'Employee not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Employee deactivated successfully',
+      data: employee,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to delete employee',
+    });
+  }
+};

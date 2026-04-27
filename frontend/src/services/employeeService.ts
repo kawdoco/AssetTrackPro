@@ -12,6 +12,7 @@ export interface EmployeeRecord {
   name: string;
   email: string | null;
   status: 'ACTIVE' | 'INACTIVE';
+  is_active: boolean;
   created_at: string;
   organization: OrganizationOption | null;
 }
@@ -22,6 +23,7 @@ export interface EmployeeCreatePayload {
   name: string;
   email: string;
   status: 'ACTIVE' | 'INACTIVE';
+  is_active?: boolean;
 }
 
 type ApiResponse<T> = {
@@ -49,5 +51,19 @@ export const createEmployee = async (payload: EmployeeCreatePayload) => {
     organization_id: Number(payload.organization_id),
   });
 
+  return response.data.data;
+};
+
+export const updateEmployee = async (id: number, payload: EmployeeCreatePayload) => {
+  const response = await axiosInstance.put<ApiResponse<EmployeeRecord>>(`/employees/${id}`, {
+    ...payload,
+    organization_id: Number(payload.organization_id),
+  });
+
+  return response.data.data;
+};
+
+export const deleteEmployee = async (id: number) => {
+  const response = await axiosInstance.delete<ApiResponse<EmployeeRecord>>(`/employees/${id}`);
   return response.data.data;
 };
