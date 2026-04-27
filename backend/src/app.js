@@ -3,6 +3,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes.js';
 import assetRoutes from './routes/assetRoutes.js';
+import organizationRoutes from './routes/organizationRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -20,7 +21,8 @@ const openApiSpec = {
 	tags: [
 		{ name: 'Health' },
 		{ name: 'Auth' },
-		{ name: 'Assets' }
+		{ name: 'Assets' },
+		{ name: 'Organizations' }
 	],
 	components: {
 		securitySchemes: {
@@ -127,6 +129,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 // --- Routes -------------------------------------------------------------------
 app.get('/', (_req, res) => res.json({ message: 'AssetTrackPro API v2' }));
 app.use('/api/auth', authRoutes);
+app.use('/api/organizations', organizationRoutes);
 app.use('/api/assets', assetRoutes);
 
 // --- Global error handler -----------------------------------------------------
