@@ -3,6 +3,7 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes.js';
 import assetRoutes from './routes/assetRoutes.js';
+import employeeRoutes from './routes/employeeRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -20,7 +21,8 @@ const openApiSpec = {
 	tags: [
 		{ name: 'Health' },
 		{ name: 'Auth' },
-		{ name: 'Assets' }
+		{ name: 'Assets' },
+		{ name: 'Employees' }
 	],
 	components: {
 		securitySchemes: {
@@ -109,6 +111,27 @@ const openApiSpec = {
 				summary: 'Delete asset by id',
 				security: [{ bearerAuth: [] }]
 			}
+		},
+		'/api/employees': {
+			get: {
+				tags: ['Employees'],
+				summary: 'List employees',
+				security: [{ bearerAuth: [] }]
+			}
+		},
+		'/api/employees/create': {
+			post: {
+				tags: ['Employees'],
+				summary: 'Create employee',
+				security: [{ bearerAuth: [] }]
+			}
+		},
+		'/api/employees/organizations': {
+			get: {
+				tags: ['Employees'],
+				summary: 'List organizations for employee form',
+				security: [{ bearerAuth: [] }]
+			}
 		}
 	}
 };
@@ -128,6 +151,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.get('/', (_req, res) => res.json({ message: 'AssetTrackPro API v2' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/assets', assetRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // --- Global error handler -----------------------------------------------------
 app.use(errorHandler);

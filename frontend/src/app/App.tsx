@@ -14,8 +14,14 @@ import ReportsAnalytics from "./components/reportsAnalytics";
 import Settings from "./components/settings";
 import AlertsIncidents from "./components/AlertsIncidents";
 import { OrganizationManagement } from "./components/OrganizationManagement";
+import { Toaster } from "sonner";
 
-import { Package, Truck, AlertCircle, RefreshCw } from "@/icons/lucideMuiAdapter";
+import {
+  Package,
+  Truck,
+  AlertCircle,
+  RefreshCw,
+} from "@/icons/lucideMuiAdapter";
 
 import LoginPage from "../auth/LoginPage";
 import { useAuth } from "../hooks/useAuth";
@@ -33,8 +39,22 @@ export type TabId =
   | "settings";
 
 export default function App() {
-  const { isAuthenticated, user, token, loading, login, logout, getCurrentUser } = useAuth();
-  const { themeMode, setThemeMode, densityMode, setDensityMode, resolvedTheme } = useUiTheme();
+  const {
+    isAuthenticated,
+    user,
+    token,
+    loading,
+    login,
+    logout,
+    getCurrentUser,
+  } = useAuth();
+  const {
+    themeMode,
+    setThemeMode,
+    densityMode,
+    setDensityMode,
+    resolvedTheme,
+  } = useUiTheme();
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
@@ -178,6 +198,11 @@ export default function App() {
 
   return (
     <div className="min-h-screen flex font-sans text-[var(--text-primary)] bg-[var(--surface-0)]">
+      <Toaster
+        position="top-right"
+        richColors
+        theme={resolvedTheme === "dark" ? "dark" : "light"}
+      />
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -213,4 +238,3 @@ export default function App() {
     </div>
   );
 }
-
