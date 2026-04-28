@@ -8,4 +8,4 @@ All notable changes to this project will be documented in this file.
 - System diagrams: ERD, Use Case Diagram, Flowchart
 - Backend folder structure initialized
 - Login page done for the Three users
-- Backend is under devlopement
+- Devided Backend Devlopemnt amoung team members
