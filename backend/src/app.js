@@ -4,6 +4,7 @@ import swaggerUi from 'swagger-ui-express';
 import authRoutes from './routes/authRoutes.js';
 import assetRoutes from './routes/assetRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
+import branchRoutes from './routes/branchRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -130,6 +131,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.get('/', (_req, res) => res.json({ message: 'AssetTrackPro API v2' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/branches', branchRoutes);
 app.use('/api/assets', assetRoutes);
 
 // --- Global error handler -----------------------------------------------------
