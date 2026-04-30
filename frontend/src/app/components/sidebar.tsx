@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 import React from "react";
 import {
   LayoutDashboard,
@@ -13,8 +12,8 @@ import {
   PanelLeftIcon,
 } from "@/icons/lucideMuiAdapter";
 
-import type { TabId } from "../../utils/routes";
 import logo from "../../assets/logo.png";
+import type { TabId } from "../App";
 
 interface SidebarProps {
   activeTab: TabId;

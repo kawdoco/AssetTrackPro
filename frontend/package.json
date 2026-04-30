@@ -1,5 +1,5 @@
 {
-  "name": "assettrackpro",
+  "name": "@figma/my-make-file",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -13,6 +13,8 @@
     "@mui/icons-material": "7.3.5",
     "@mui/material": "7.3.5",
     "@popperjs/core": "2.11.8",
+    "@reduxjs/toolkit": "^2.11.2",
+    "axios": "^1.13.6",
     "@radix-ui/react-accordion": "1.2.3",
     "@radix-ui/react-alert-dialog": "1.1.6",
     "@radix-ui/react-aspect-ratio": "1.1.2",
@@ -48,8 +50,8 @@
     "cmdk": "1.1.1",
     "date-fns": "3.6.0",
     "embla-carousel-react": "8.6.0",
+    "formik": "^2.4.6",
     "input-otp": "1.4.2",
-    "lucide-react": "0.487.0",
     "motion": "12.23.24",
     "next-themes": "0.4.6",
     "react-day-picker": "8.10.1",
@@ -60,11 +62,12 @@
     "react-redux": "^9.2.0",
     "react-resizable-panels": "2.1.7",
     "react-responsive-masonry": "2.7.1",
-    "react-router-dom": "^6.20.0",
+    "react-router-dom": "^7.13.1",
     "react-slick": "0.31.0",
     "recharts": "2.15.2",
     "redux": "^5.0.1",
     "sonner": "2.0.3",
+    "yup": "^1.7.1",
     "tailwind-merge": "3.2.0",
     "tw-animate-css": "1.3.8",
     "vaul": "1.1.2"
@@ -76,7 +79,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "4.7.0",
     "tailwindcss": "4.1.12",
-    "vite": "^6.4.1"
+    "vite": "6.3.5"
   },
   "peerDependencies": {
     "react": "^18.3.1",
