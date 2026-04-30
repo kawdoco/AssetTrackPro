@@ -19,6 +19,7 @@ import CloseIconMui from '@mui/icons-material/Close';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import EditIcon from '@mui/icons-material/Edit';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -58,6 +59,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import DeleteIcon from '@mui/icons-material/Delete';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -96,6 +98,7 @@ export const FileDown = FileDownloadIcon;
 export const FileSpreadsheet = TableChartIcon;
 export const FileText = DescriptionIcon;
 export const Filter = FilterListIcon;
+export const Edit = EditIcon;
 export const Globe = PublicIcon;
 export const GripVerticalIcon = DragIndicatorIcon;
 export const History = HistoryIcon;
@@ -124,6 +127,7 @@ export const Sun = LightModeIcon;
 export const Tag = SellIcon;
 export const TrendingDown = TrendingDownIcon;
 export const TrendingUp = TrendingUpIcon;
+export const Trash2 = DeleteIcon;
 export const Truck = LocalShippingIcon;
 export const User = PersonOutlineIcon;
 export const UserCog = ManageAccountsIcon;
@@ -170,6 +174,7 @@ export default {
   FileSpreadsheet,
   FileText,
   Filter,
+  Edit,
   Globe,
   GripVerticalIcon,
   History,
@@ -196,6 +201,7 @@ export default {
   Tag,
   TrendingDown,
   TrendingUp,
+  Trash2,
   Truck,
   User,
   UserCog,
