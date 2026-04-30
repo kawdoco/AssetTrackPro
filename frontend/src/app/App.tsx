@@ -199,7 +199,8 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex font-sans text-[var(--text-primary)] bg-[var(--surface-0)]">
+    <>
+      <div className="min-h-screen flex font-sans text-[var(--text-primary)] bg-[var(--surface-0)]">
       <Toaster
         position="top-right"
         richColors
@@ -237,24 +238,25 @@ export default function App() {
         title={modalConfig.title}
         type={modalConfig.type}
       />
-    </div>
-    <BrowserRouter>
-      <Routes>
-        {routes.map((route, i) => {
-          if (route.children && route.children.length > 0) {
-            return (
-              <Route key={i} path={route.path} element={route.element}>
-                {route.children.map((child, j) => (
-                  <Route key={j} path={child.path} element={child.element} />
-                ))}
-              </Route>
-            );
-          }
-          return <Route key={i} path={route.path} element={route.element} />;
-        })}
-        {/* Catch-all redirect to login */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </BrowserRouter>
+      </div>
+      <BrowserRouter>
+        <Routes>
+          {routes.map((route, i) => {
+            if (route.children && route.children.length > 0) {
+              return (
+                <Route key={i} path={route.path} element={route.element}>
+                  {route.children.map((child, j) => (
+                    <Route key={j} path={child.path} element={child.element} />
+                  ))}
+                </Route>
+              );
+            }
+            return <Route key={i} path={route.path} element={route.element} />;
+          })}
+          {/* Catch-all redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   );
 }
