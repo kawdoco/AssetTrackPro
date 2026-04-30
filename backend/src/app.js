@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes.js';
 import assetRoutes from './routes/assetRoutes.js';
 import organizationRoutes from './routes/organizationRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
+import branchRoutes from './routes/branchRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -25,6 +26,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 app.get('/', (_req, res) => res.json({ message: 'AssetTrackPro API v1', online: true }));
 app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
+app.use('/api/branches', branchRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/employees', employeeRoutes);
 

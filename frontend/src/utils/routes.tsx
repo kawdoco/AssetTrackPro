@@ -7,17 +7,22 @@ import ReportsAnalytics from "../app/components/reportsAnalytics";
 import Settings from "../app/components/settings";
 import AlertsIncidents from "../app/components/AlertsIncidents";
 import { OrganizationManagement } from "../app/components/OrganizationManagement";
+import { BranchManagement } from "../app/components/BranchManagement";
 import { StatsCard } from "../app/components/stats-card";
 import { AssetMap } from "../app/components/asset-map";
 import { QuickActions } from "../app/components/quick-actions";
 import { AlertsPanel } from "../app/components/alerts-panel";
 import { MainLayout } from "../app/layouts/MainLayout";
+import { LoginPage } from "../pages/LoginPage";
+import { RegisterPage } from "../pages/RegisterPage";
+import { ProtectedRoute } from "../components/ProtectedRoute";
 
 export type TabId =
   | "dashboard"
   | "assets"
   | "employees"
   | "organizations"
+  | "branches"
   | "alerts"
   | "reports"
   | "settings";
@@ -92,8 +97,20 @@ const Dashboard = () => {
 // Route Configuration
 export const routes = [
   {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
+  {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <ProtectedRoute>
+        <MainLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",
@@ -110,6 +127,10 @@ export const routes = [
       {
         path: "organizations",
         element: <OrganizationManagement />,
+      },
+      {
+        path: "branches",
+        element: <BranchManagement />,
       },
       {
         path: "alerts",
