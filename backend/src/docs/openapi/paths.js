@@ -390,6 +390,42 @@ export const paths = {
     }
   },
   '/api/organizations': {
+    get: {
+      tags: ['Organizations'],
+      summary: 'Get organizations with pagination and filters',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
+        { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by organization name' },
+        { name: 'includeInactive', in: 'query', schema: { type: 'boolean', default: false }, description: 'Include inactive organizations' }
+      ],
+      responses: {
+        200: {
+          description: 'Organizations list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Organization' } },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      page: { type: 'integer', example: 1 },
+                      limit: { type: 'integer', example: 10 },
+                      total: { type: 'integer', example: 24 },
+                      totalPages: { type: 'integer', example: 3 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     post: {
       tags: ['Organizations'],
       summary: 'Create a new organization',
@@ -423,50 +459,6 @@ export const paths = {
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/ErrorResponse' }
-            }
-          }
-        }
-      }
-    },
-    get: {
-      tags: ['Organizations'],
-      summary: 'Get organizations with pagination and filters',
-      security: [{ bearerAuth: [] }],
-      parameters: [
-        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
-        { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
-        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by organization name' },
-        { name: 'includeInactive', in: 'query', schema: { type: 'boolean', default: false }, description: 'Include inactive organizations' }
-      ],
-      responses: {
-        200: {
-          description: 'Organizations list',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  success: { type: 'boolean', example: true },
-                  data: {
-                    type: 'array',
-                    items: {
-                      allOf: [{ $ref: '#/components/schemas/Organization' }],
-                      properties: {
-                        _count: { $ref: '#/components/schemas/OrganizationCountSummary' }
-                      }
-                    }
-                  },
-                  pagination: {
-                    type: 'object',
-                    properties: {
-                      page: { type: 'integer', example: 1 },
-                      limit: { type: 'integer', example: 10 },
-                      total: { type: 'integer', example: 24 },
-                      totalPages: { type: 'integer', example: 3 }
-                    }
-                  }
-                }
-              }
             }
           }
         }
@@ -624,6 +616,417 @@ export const paths = {
         },
         404: {
           description: 'Organization not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/branches': {
+    get: {
+      tags: ['Branches'],
+      summary: 'Get branches with pagination and filters',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
+        { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by branch name or city' },
+        { name: 'organization_id', in: 'query', schema: { type: 'integer', nullable: true }, description: 'Filter by organization ID' },
+        { name: 'includeInactive', in: 'query', schema: { type: 'boolean', default: false }, description: 'Include inactive branches' }
+      ],
+      responses: {
+        200: {
+          description: 'Branches list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Branch' } },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      page: { type: 'integer', example: 1 },
+                      limit: { type: 'integer', example: 10 },
+                      total: { type: 'integer', example: 24 },
+                      totalPages: { type: 'integer', example: 3 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    post: {
+      tags: ['Branches'],
+      summary: 'Create a new branch',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/BranchCreateRequest' }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Branch created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch created successfully' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/branches/{id}': {
+    get: {
+      tags: ['Branches'],
+      summary: 'Get branch by ID',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Branch details',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/BranchDetail' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    put: {
+      tags: ['Branches'],
+      summary: 'Update branch',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/BranchUpdateRequest' }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Branch updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch updated successfully' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    delete: {
+      tags: ['Branches'],
+      summary: 'Deactivate branch',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Branch deactivated',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch deactivated successfully' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/branches/{id}/reactivate': {
+    patch: {
+      tags: ['Branches'],
+      summary: 'Reactivate branch',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Branch reactivated',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch reactivated successfully' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees/organizations': {
+    get: {
+      tags: ['Employees'],
+      summary: 'Get organizations available for employee creation',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Organization list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/EmployeeOrganizationSummary' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees': {
+    get: {
+      tags: ['Employees'],
+      summary: 'Get employees',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'organization_id', in: 'query', schema: { type: 'integer' }, description: 'Filter by organization ID' },
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by name, employee code, or email' },
+        { name: 'is_active', in: 'query', schema: { type: 'boolean' }, description: 'Filter by active state' }
+      ],
+      responses: {
+        200: {
+          description: 'Employees list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Employee' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees/create': {
+    post: {
+      tags: ['Employees'],
+      summary: 'Create employee',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/EmployeeCreateRequest' }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Employee created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Employee created successfully' },
+                  data: { $ref: '#/components/schemas/Employee' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate employee code',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees/{id}': {
+    put: {
+      tags: ['Employees'],
+      summary: 'Update employee',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Employee ID' }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/EmployeeUpdateRequest' }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Employee updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Employee updated successfully' },
+                  data: { $ref: '#/components/schemas/Employee' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Employee not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate employee code',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    delete: {
+      tags: ['Employees'],
+      summary: 'Deactivate employee',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Employee ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Employee deactivated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Employee deactivated successfully' },
+                  data: { $ref: '#/components/schemas/Employee' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Employee not found',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/ErrorResponse' }
