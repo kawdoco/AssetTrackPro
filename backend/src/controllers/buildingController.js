@@ -1,5 +1,10 @@
 import * as buildingService from '../services/buildingService.js';
 
+const parseBuildingId = (value) => {
+  const id = Number.parseInt(value, 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
+};
+
 // GET /api/buildings
 export const getAllBuildings = async (req, res) => {
   try {
@@ -26,7 +31,12 @@ export const getAllBuildings = async (req, res) => {
 // GET /api/buildings/:id
 export const getBuildingById = async (req, res) => {
   try {
-    const id       = parseInt(req.params.id);
+    const id = parseBuildingId(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Valid building id is required' });
+    }
+
     const building = await buildingService.getBuildingById(id);
 
     if (!building) {
@@ -85,7 +95,12 @@ export const createBuilding = async (req, res) => {
 // PUT /api/buildings/:id
 export const updateBuilding = async (req, res) => {
   try {
-    const id       = parseInt(req.params.id);
+    const id = parseBuildingId(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Valid building id is required' });
+    }
+
     const existing = await buildingService.getBuildingById(id);
 
     if (!existing) {
@@ -129,7 +144,12 @@ export const updateBuilding = async (req, res) => {
 // DELETE /api/buildings/:id
 export const deleteBuilding = async (req, res) => {
   try {
-    const id       = parseInt(req.params.id);
+    const id = parseBuildingId(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Valid building id is required' });
+    }
+
     const existing = await buildingService.getBuildingById(id);
 
     if (!existing) {
@@ -150,7 +170,12 @@ export const deleteBuilding = async (req, res) => {
 // GET /api/buildings/:id/zones
 export const getBuildingZones = async (req, res) => {
   try {
-    const id       = parseInt(req.params.id);
+    const id = parseBuildingId(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({ success: false, message: 'Valid building id is required' });
+    }
+
     const existing = await buildingService.getBuildingById(id);
 
     if (!existing) {

@@ -625,35 +625,35 @@ export const paths = {
       }
     }
   },
-  '/api/branches': {
+  '/api/buildings': {
     get: {
-      tags: ['Branches'],
-      summary: 'Get branches with pagination and filters',
+      tags: ['Buildings'],
+      summary: 'Get buildings with pagination, search and optional branch filter',
       security: [{ bearerAuth: [] }],
       parameters: [
         { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
         { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
-        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by branch name or city' },
-        { name: 'organization_id', in: 'query', schema: { type: 'integer', nullable: true }, description: 'Filter by organization ID' },
-        { name: 'includeInactive', in: 'query', schema: { type: 'boolean', default: false }, description: 'Include inactive branches' }
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by building name' },
+        { name: 'branch_id', in: 'query', schema: { type: 'integer', nullable: true }, description: 'Filter by branch ID' }
       ],
       responses: {
         200: {
-          description: 'Branches list',
+          description: 'Buildings list',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
                   success: { type: 'boolean', example: true },
-                  data: { type: 'array', items: { $ref: '#/components/schemas/Branch' } },
+                  message: { type: 'string', example: 'Buildings retrieved successfully' },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Building' } },
                   pagination: {
                     type: 'object',
                     properties: {
-                      page: { type: 'integer', example: 1 },
-                      limit: { type: 'integer', example: 10 },
-                      total: { type: 'integer', example: 24 },
-                      totalPages: { type: 'integer', example: 3 }
+                      currentPage: { type: 'integer', example: 1 },
+                      totalPages: { type: 'integer', example: 3 },
+                      totalItems: { type: 'integer', example: 24 },
+                      itemsPerPage: { type: 'integer', example: 10 }
                     }
                   }
                 }
@@ -664,28 +664,28 @@ export const paths = {
       }
     },
     post: {
-      tags: ['Branches'],
-      summary: 'Create a new branch',
+      tags: ['Buildings'],
+      summary: 'Create a new building',
       security: [{ bearerAuth: [] }],
       requestBody: {
         required: true,
         content: {
           'application/json': {
-            schema: { $ref: '#/components/schemas/BranchCreateRequest' }
+            schema: { $ref: '#/components/schemas/BuildingCreateRequest' }
           }
         }
       },
       responses: {
         201: {
-          description: 'Branch created successfully',
+          description: 'Building created successfully',
           content: {
             'application/json': {
               schema: {
                 type: 'object',
                 properties: {
                   success: { type: 'boolean', example: true },
-                  data: { $ref: '#/components/schemas/Branch' },
-                  message: { type: 'string', example: 'Branch created successfully' }
+                  message: { type: 'string', example: 'Building created successfully' },
+                  data: { $ref: '#/components/schemas/Building' }
                 }
               }
             }
@@ -693,6 +693,173 @@ export const paths = {
         },
         400: {
           description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate building in branch',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/buildings/{id}': {
+    get: {
+      tags: ['Buildings'],
+      summary: 'Get building by ID',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Building details',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building retrieved successfully' },
+                  data: { $ref: '#/components/schemas/Building' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    put: {
+      tags: ['Buildings'],
+      summary: 'Update building',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/BuildingUpdateRequest' }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Building updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building updated successfully' },
+                  data: { $ref: '#/components/schemas/Building' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate building in branch',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    delete: {
+      tags: ['Buildings'],
+      summary: 'Delete building',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Building deleted successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building deleted successfully' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/buildings/{id}/zones': {
+    get: {
+      tags: ['Buildings'],
+      summary: 'Get zones for a building',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      responses: {
+        200: {
+          description: 'List of zones',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Zones retrieved successfully' },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/ZoneSummary' } }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/ErrorResponse' }

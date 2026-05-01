@@ -1,5 +1,4 @@
-import { prisma } from '../config/db.js';
-// Change this path to match where your PrismaClient is created in your project
+import prisma from '../config/prisma.js';
 
 // GET ALL BUILDINGS  (with optional branch_id filter + search + pagination)
 export const getAllBuildings = async ({ branch_id, search, page, limit }) => {
@@ -18,7 +17,7 @@ export const getAllBuildings = async ({ branch_id, search, page, limit }) => {
       orderBy : { created_at: 'desc' },
       include : {
         branch : { select: { id: true, name: true } },
-        zones  : { select: { id: true, name: true } },
+        zones  : { select: { id: true, zone_name: true, zone_type: true } },
       },
     }),
     prisma.building.count({ where }),
@@ -66,7 +65,7 @@ export const updateBuilding = async (id, data) => {
     data,
     include : {
       branch : { select: { id: true, name: true } },
-      zones  : { select: { id: true, name: true } },
+      zones  : { select: { id: true, zone_name: true, zone_type: true } },
     },
   });
 };

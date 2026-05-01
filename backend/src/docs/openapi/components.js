@@ -67,8 +67,8 @@ export const components = {
       type: 'object',
       properties: {
         id: { type: 'integer', example: 4 },
-        zone_name: { type: 'string', example: 'Warehouse A' },
-        zone_type: { type: 'string', example: 'STORAGE' }
+        zone_name: { type: 'string', example: 'Zone A' },
+        zone_type: { type: 'string', nullable: true, example: 'STORAGE' }
       }
     },
     Asset: {
@@ -219,6 +219,36 @@ export const components = {
           type: 'array',
           items: { $ref: '#/components/schemas/BranchBuildingSummary' }
         }
+      }
+    },
+    Building: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 12 },
+        branch_id: { type: 'integer', example: 4 },
+        name: { type: 'string', example: 'Warehouse 12' },
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
+        branch: { $ref: '#/components/schemas/BranchOrganizationSummary' },
+        zones: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/ZoneSummary' }
+        }
+      }
+    },
+    BuildingCreateRequest: {
+      type: 'object',
+      required: ['branch_id', 'name'],
+      properties: {
+        branch_id: { type: 'integer', example: 4 },
+        name: { type: 'string', example: 'Warehouse 12' }
+      }
+    },
+    BuildingUpdateRequest: {
+      type: 'object',
+      properties: {
+        branch_id: { type: 'integer', example: 4 },
+        name: { type: 'string', example: 'Warehouse 12' }
       }
     },
     EmployeeOrganizationSummary: {
