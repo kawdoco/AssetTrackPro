@@ -1,14 +1,14 @@
 npx prisma generate
 npx prisma db push 
 
-Organization - Poorna
-Branch - Ruvinari
-Building - Ishara
+Organization - Poorna✅
+Branch - Ruvinari✅
+Building - Ishara✅
 Zone - Tharaka
 Gate - Pavithra
-Employee - Mihashi
-Asset - Parindya
+Employee - Kaveen✅
+Asset - Avishka
 AssetAssignment - Dilshan
-MovementEvent - Kaveen
+MovementEvent - Mihashi
 Alert - 
 User - 

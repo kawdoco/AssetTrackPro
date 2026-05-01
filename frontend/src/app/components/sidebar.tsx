@@ -57,7 +57,7 @@ export const Sidebar = ({
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <img
               src={logo}
-              alt="TrackPro"
+              alt="AssetTrackPro"
               className="w-8 h-8 rounded-md object-contain"
             />
             {!isCollapsed && (
