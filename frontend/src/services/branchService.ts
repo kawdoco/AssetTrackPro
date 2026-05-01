@@ -6,6 +6,12 @@ export interface Branch {
   name: string;
   city: string;
   status: string; // ACTIVE, INACTIVE
+  map_center_lat?: number | null;
+  map_center_lng?: number | null;
+  map_zoom?: number;
+  boundary_points?: MapPoint[] | null;
+  gate_markers?: BranchGateMarker[] | null;
+  map_updated_at?: string | null;
   created_at: string;
   updated_at: string;
   organization?: {
@@ -15,6 +21,19 @@ export interface Branch {
   _count?: {
     buildings: number;
   };
+}
+
+export interface MapPoint {
+  lat: number;
+  lng: number;
+}
+
+export interface BranchGateMarker {
+  id: string;
+  name: string;
+  type: string;
+  lat: number;
+  lng: number;
 }
 
 export interface CreateBranchData {
@@ -39,6 +58,14 @@ export interface BranchResponse {
     total: number;
     totalPages: number;
   };
+}
+
+export interface UpdateBranchMapData {
+  map_center_lat: number | null;
+  map_center_lng: number | null;
+  map_zoom: number;
+  boundary_points: MapPoint[] | null;
+  gate_markers: BranchGateMarker[];
 }
 
 /**
@@ -120,6 +147,33 @@ export const deactivateBranch = async (id: number): Promise<BranchResponse> => {
 export const reactivateBranch = async (id: number): Promise<BranchResponse> => {
   try {
     const response = await axiosInstance.patch<BranchResponse>(`/branches/${id}/reactivate`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Get branch map configuration
+ */
+export const getBranchMap = async (id: number): Promise<BranchResponse> => {
+  try {
+    const response = await axiosInstance.get<BranchResponse>(`/branches/${id}/map`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+/**
+ * Update branch map configuration
+ */
+export const updateBranchMap = async (
+  id: number,
+  data: UpdateBranchMapData
+): Promise<BranchResponse> => {
+  try {
+    const response = await axiosInstance.put<BranchResponse>(`/branches/${id}/map`, data);
     return response.data;
   } catch (error) {
     throw error;

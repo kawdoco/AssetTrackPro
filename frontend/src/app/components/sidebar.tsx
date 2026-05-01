@@ -13,7 +13,7 @@ import {
 } from "@/icons/lucideMuiAdapter";
 
 import logo from "../../assets/logo.png";
-import type { TabId } from "../App";
+import type { TabId } from "../../utils/routes";
 
 interface SidebarProps {
   activeTab: TabId;
