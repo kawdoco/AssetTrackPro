@@ -1,10 +1,10 @@
-/// <reference types="vite/client" />
 import React from "react";
 import {
   LayoutDashboard,
   Package,
   Users,
   Building2,
+  MapPin,
   Bell,
   FileText,
   Settings,
@@ -12,8 +12,8 @@ import {
   PanelLeftIcon,
 } from "@/icons/lucideMuiAdapter";
 
-import type { TabId } from "../../utils/routes";
 import logo from "../../assets/logo.png";
+import type { TabId } from "../App";
 
 interface SidebarProps {
   activeTab: TabId;
@@ -32,6 +32,7 @@ const navItems: Array<{
   { id: "assets", label: "Assets", icon: Package },
   { id: "employees", label: "Employees", icon: Users },
   { id: "organizations", label: "Organizations", icon: Building2 },
+  { id: "branches", label: "Branches", icon: MapPin },
   { id: "alerts", label: "Alerts", icon: Bell },
   { id: "reports", label: "Reports", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },

@@ -4,13 +4,12 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { Sidebar } from "../components/sidebar";
 import { TopBar } from "../components/top-bar";
 import { ActionModal } from "../components/modals";
-import LoginPage from "../../auth/LoginPage";
 import { TabId, ModalType } from "../../utils/routes";
 
 export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
-  const [isAuthed, setIsAuthed] = useState(false);
   const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -20,11 +19,6 @@ export const MainLayout: React.FC = () => {
     title: "",
     type: "asset",
   });
-
-  // Show login page until authenticated
-  if (!isAuthed) {
-    return <LoginPage onLogin={() => setIsAuthed(true)} />;
-  }
 
   const handleTabChange = (tab: TabId) => {
     setActiveTab(tab);
@@ -46,20 +40,25 @@ export const MainLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white flex font-sans text-[#395A8F]">
+    <div className="min-h-screen flex font-sans text-[var(--text-primary)] bg-[var(--surface-0)]">
       <Sidebar
         activeTab={activeTab}
         setActiveTab={handleTabChange}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         onLogout={() => {
-          setIsAuthed(false);
           setActiveTab("dashboard");
-          navigate("/");
+          navigate("/login");
         }}
       />
 
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <TopBar />
-        <main className="flex-1 p-8 bg-gray-50/30 overflow-y-auto">
+      <div
+        className={`flex-1 flex flex-col min-h-screen transition-all duration-200 ${
+          isSidebarCollapsed ? "ml-[72px]" : "ml-64"
+        }`}
+      >
+        <TopBar activeTab={activeTab} />
+        <main className="flex-1 p-8 overflow-y-auto bg-[var(--surface-1)]">
           <Outlet />
         </main>
       </div>

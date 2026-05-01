@@ -17,6 +17,7 @@ import CloseIconMui from '@mui/icons-material/Close';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import DescriptionIcon from '@mui/icons-material/Description';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import EditIcon from '@mui/icons-material/Edit';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -37,8 +38,6 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import MouseIcon from '@mui/icons-material/Mouse';
 import MonitorHeartIcon from '@mui/icons-material/MonitorHeart';
 import NorthEastIcon from '@mui/icons-material/NorthEast';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
@@ -58,6 +57,7 @@ import SyncIcon from '@mui/icons-material/Sync';
 import TableChartIcon from '@mui/icons-material/TableChart';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
+import DeleteIcon from '@mui/icons-material/Delete';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import ViewSidebarIcon from '@mui/icons-material/ViewSidebar';
 import VisibilityIcon from '@mui/icons-material/Visibility';
@@ -96,6 +96,7 @@ export const FileDown = FileDownloadIcon;
 export const FileSpreadsheet = TableChartIcon;
 export const FileText = DescriptionIcon;
 export const Filter = FilterListIcon;
+export const Edit = EditIcon;
 export const Globe = PublicIcon;
 export const GripVerticalIcon = DragIndicatorIcon;
 export const History = HistoryIcon;
@@ -111,8 +112,6 @@ export const MoreHorizontal = MoreHorizIcon;
 export const MousePointer2 = MouseIcon;
 export const Package = Inventory2Icon;
 export const PanelLeftIcon = ViewSidebarIcon;
-export const Edit = EditIcon;
-export const Trash2 = DeleteOutlineIcon;
 export const Plus = AddIcon;
 export const RefreshCw = SyncIcon;
 export const Save = SaveIcon;
@@ -124,6 +123,7 @@ export const ShieldCheck = VerifiedUserIcon;
 export const Tag = SellIcon;
 export const TrendingDown = TrendingDownIcon;
 export const TrendingUp = TrendingUpIcon;
+export const Trash2 = DeleteIcon;
 export const Truck = LocalShippingIcon;
 export const User = PersonOutlineIcon;
 export const UserCog = ManageAccountsIcon;
@@ -170,6 +170,7 @@ export default {
   FileSpreadsheet,
   FileText,
   Filter,
+  Edit,
   Globe,
   GripVerticalIcon,
   History,
@@ -196,6 +197,7 @@ export default {
   Tag,
   TrendingDown,
   TrendingUp,
+  Trash2,
   Truck,
   User,
   UserCog,

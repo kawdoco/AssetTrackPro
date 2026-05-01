@@ -1,23 +1,29 @@
 import React from "react";
-import { Package, Truck, AlertCircle, RefreshCw } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
+import { Package, Truck, AlertCircle, RefreshCw } from "@/icons/lucideMuiAdapter";
 import { AssetManagement } from "../app/components/asset-management";
 import { EmployeeManagement } from "../app/components/EmployeeManagement";
 import ReportsAnalytics from "../app/components/reportsAnalytics";
 import Settings from "../app/components/settings";
 import AlertsIncidents from "../app/components/AlertsIncidents";
 import { OrganizationManagement } from "../app/components/OrganizationManagement";
+import { BranchManagement } from "../app/components/BranchManagement";
 import { StatsCard } from "../app/components/stats-card";
 import { AssetMap } from "../app/components/asset-map";
 import { QuickActions } from "../app/components/quick-actions";
 import { AlertsPanel } from "../app/components/alerts-panel";
 import { MainLayout } from "../app/layouts/MainLayout";
+import LoginPage from "@/auth/LoginPage";
+import { ProtectedRoute } from "../components/ProtectedRoute";
+import { useAuth } from "../hooks/useAuth";
+import { useUiTheme } from "../hooks/useUiTheme";
 
 export type TabId =
   | "dashboard"
   | "assets"
   | "employees"
   | "organizations"
+  | "branches"
   | "alerts"
   | "reports"
   | "settings";
@@ -89,11 +95,58 @@ const Dashboard = () => {
   );
 };
 
+const SettingsRoute = () => {
+  const {
+    themeMode,
+    setThemeMode,
+    densityMode,
+    setDensityMode,
+    resolvedTheme,
+  } = useUiTheme();
+
+  return (
+    <Settings
+      themeMode={themeMode}
+      setThemeMode={setThemeMode}
+      densityMode={densityMode}
+      setDensityMode={setDensityMode}
+      resolvedTheme={resolvedTheme}
+    />
+  );
+};
+
+const LoginRoute = () => {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  return (
+    <LoginPage
+      onLogin={async (email: string, password: string) => {
+        try {
+          await login(email, password).unwrap();
+          navigate("/");
+          return true;
+        } catch {
+          return false;
+        }
+      }}
+    />
+  );
+};
+
 // Route Configuration
 export const routes = [
   {
+    path: "/login",
+    element: <LoginRoute />,
+  },
+  {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <ProtectedRoute>
+        <MainLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "",
@@ -112,6 +165,10 @@ export const routes = [
         element: <OrganizationManagement />,
       },
       {
+        path: "branches",
+        element: <BranchManagement />,
+      },
+      {
         path: "alerts",
         element: <AlertsIncidents />,
       },
@@ -121,7 +178,7 @@ export const routes = [
       },
       {
         path: "settings",
-        element: <Settings />,
+        element: <SettingsRoute />,
       },
     ],
   },
