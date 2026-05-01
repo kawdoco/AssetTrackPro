@@ -1,5 +1,5 @@
 npx prisma generate
-npx prisma db push
+npx prisma db push 
 
 Organization - Poorna
 Branch - Ruvinari
