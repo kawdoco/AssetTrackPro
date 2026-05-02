@@ -368,14 +368,6 @@ export const BranchMapEditor: React.FC = () => {
     setSelectedGateId(nextGateMarkers[0]?.id ?? null);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-[var(--text-muted)]">Loading branch map editor...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
@@ -480,6 +472,11 @@ export const BranchMapEditor: React.FC = () => {
 
           <div className="relative h-[700px] overflow-hidden rounded-lg border border-[var(--surface-border)] bg-[var(--surface-1)]">
             <div ref={containerRef} className="absolute inset-0" />
+            {loading && (
+              <div className="absolute inset-0 z-10 flex items-center justify-center bg-[var(--surface-1)]/85 backdrop-blur-sm">
+                <p className="text-sm text-[var(--text-muted)]">Loading branch map editor...</p>
+              </div>
+            )}
           </div>
         </div>
 
