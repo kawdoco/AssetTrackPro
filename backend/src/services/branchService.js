@@ -54,7 +54,17 @@ const normalizeZoom = (value, fallback = 17) => {
   return Number.isInteger(parsed) ? parsed : fallback;
 };
 
-const normalizeBoundaryPoints = (points) => {
+const clampGateRadius = (value) => {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return 25;
+  }
+
+  return Math.max(20, Math.min(30, parsed));
+};
+
+const normalizePolygonPoints = (points) => {
   if (!Array.isArray(points) || points.length === 0) {
     return null;
   }
@@ -67,6 +77,60 @@ const normalizeBoundaryPoints = (points) => {
     .filter((point) => point.lat !== null && point.lng !== null);
 
   return normalizedPoints.length >= 3 ? normalizedPoints : null;
+};
+
+const normalizeBoundaryPayload = (payload) => {
+  if (!payload) {
+    return null;
+  }
+
+  if (Array.isArray(payload)) {
+    const points = normalizePolygonPoints(payload);
+    return points ? { type: 'polygon', points } : null;
+  }
+
+  if (payload.type === 'polygon') {
+    const points = normalizePolygonPoints(payload.points);
+    return points ? { type: 'polygon', points } : null;
+  }
+
+  if (payload.type === 'rectangle') {
+    const north = normalizeCoordinate(payload?.bounds?.north);
+    const south = normalizeCoordinate(payload?.bounds?.south);
+    const east = normalizeCoordinate(payload?.bounds?.east);
+    const west = normalizeCoordinate(payload?.bounds?.west);
+
+    if ([north, south, east, west].some((value) => value === null)) {
+      return null;
+    }
+
+    if (north <= south || east <= west) {
+      return null;
+    }
+
+    return {
+      type: 'rectangle',
+      bounds: { north, south, east, west },
+    };
+  }
+
+  if (payload.type === 'circle') {
+    const lat = normalizeCoordinate(payload?.center?.lat);
+    const lng = normalizeCoordinate(payload?.center?.lng);
+    const radius_m = Math.max(1, Number(payload?.radius_m) || 0);
+
+    if (lat === null || lng === null || !Number.isFinite(radius_m)) {
+      return null;
+    }
+
+    return {
+      type: 'circle',
+      center: { lat, lng },
+      radius_m,
+    };
+  }
+
+  return null;
 };
 
 const normalizeGateMarkers = (markers) => {
@@ -93,6 +157,7 @@ const normalizeGateMarkers = (markers) => {
         type: typeof marker?.type === 'string' && marker.type.trim() ? marker.type.trim() : 'BOTH',
         lat,
         lng,
+        radius_m: clampGateRadius(marker?.radius_m),
       };
     })
     .filter(Boolean);
@@ -406,7 +471,7 @@ export const updateBranchMap = async (branchId, mapData) => {
     throw new Error('Branch not found');
   }
 
-  const boundaryPoints = normalizeBoundaryPoints(mapData.boundary_points);
+  const boundaryPoints = normalizeBoundaryPayload(mapData.boundary_points);
   const gateMarkers = normalizeGateMarkers(mapData.gate_markers);
   const centerLat = normalizeCoordinate(mapData.map_center_lat);
   const centerLng = normalizeCoordinate(mapData.map_center_lng);
