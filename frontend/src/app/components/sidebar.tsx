@@ -10,10 +10,11 @@ import {
   Settings,
   ChevronRight,
   PanelLeftIcon,
+  Globe,
 } from "@/icons/lucideMuiAdapter";
 
 import logo from "../../assets/logo.png";
-import type { TabId } from "../App";
+import type { TabId } from "../../utils/routes";
 
 interface SidebarProps {
   activeTab: TabId;
@@ -33,6 +34,7 @@ const navItems: Array<{
   { id: "employees", label: "Employees", icon: Users },
   { id: "organizations", label: "Organizations", icon: Building2 },
   { id: "branches", label: "Branches", icon: MapPin },
+  { id: "zones", label: "Zones", icon: Globe },
   { id: "alerts", label: "Alerts", icon: Bell },
   { id: "reports", label: "Reports", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },
