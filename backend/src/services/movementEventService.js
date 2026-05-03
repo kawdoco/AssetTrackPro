@@ -177,29 +177,8 @@ export const getMovementEventById = async (id, organizationId) => {
   return event;
 };
 
-export const getAssetLocation = async (assetId, organizationId) => {
-  const normalizedAssetId = toIntOrNull(assetId);
-  const orgId = toIntOrNull(organizationId);
-
-  if (normalizedAssetId === null) return null;
-
-  const asset = await prisma.asset.findFirst({
-    where: { id: normalizedAssetId, organization_id: orgId },
-    select: {
-      id: true,
-      asset_tag_uid: true,
-      last_seen_zone_id: true,
-      last_seen_time: true,
-      last_seen_zone: { select: { id: true, zone_name: true, zone_type: true } },
-    },
-  });
-
-  return asset;
-};
-
 export default {
   recordMovementEvent,
   listMovementEvents,
   getMovementEventById,
-  getAssetLocation,
 };

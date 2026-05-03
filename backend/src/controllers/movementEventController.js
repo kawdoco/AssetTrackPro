@@ -62,18 +62,6 @@ export const getMovementEventById = async (req, res) => {
   }
 };
 
-export const getAssetLocation = async (req, res) => {
-  try {
-    const asset = await movementService.getAssetLocation(req.params.assetId, req.organization_id);
-    if (!asset) {
-      return res.status(404).json({ success: false, message: 'Asset not found' });
-    }
-    res.status(200).json({ success: true, data: asset });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch asset location' });
-  }
-};
-
 export const simulateMovementEvent = async (req, res) => {
   try {
     const { asset_tag_uid, gate_id, event_type, signal_strength } = req.body;
@@ -116,6 +104,5 @@ export default {
   handleRfidWebhook,
   getAllMovementEvents,
   getMovementEventById,
-  getAssetLocation,
   simulateMovementEvent,
 };
