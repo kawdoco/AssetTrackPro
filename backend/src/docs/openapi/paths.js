@@ -1202,5 +1202,170 @@ export const paths = {
         }
       }
     }
-  }
+  },
+  '/api/rfid-webhook/movement-event': {
+    post: {
+      tags: ['Movement Events'],
+      summary: 'Ingest RFID movement event webhook',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/MovementEventWebhookRequest' }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'RFID event processed',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  results: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        success: { type: 'boolean', example: true },
+                        data: { $ref: '#/components/schemas/MovementEvent' },
+                        message: { type: 'string', example: 'Processed' }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/movement-events': {
+    get: {
+      tags: ['Movement Events'],
+      summary: 'List movement events',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'asset_id', in: 'query', schema: { type: 'integer' }, description: 'Filter by asset ID' },
+        { name: 'gate_id', in: 'query', schema: { type: 'integer' }, description: 'Filter by gate ID' },
+        { name: 'event_type', in: 'query', schema: { type: 'string' }, description: 'Filter by ENTER or EXIT' },
+        { name: 'trigger_source', in: 'query', schema: { type: 'string' }, description: 'Filter by RFID, SIMULATED, or MANUAL' },
+        { name: 'from_date', in: 'query', schema: { type: 'string', format: 'date-time' }, description: 'Start date/time' },
+        { name: 'to_date', in: 'query', schema: { type: 'string', format: 'date-time' }, description: 'End date/time' },
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
+        { name: 'limit', in: 'query', schema: { type: 'integer', default: 25 }, description: 'Records per page' }
+      ],
+      responses: {
+        200: {
+          description: 'Movement events list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/MovementEvent' } },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      page: { type: 'integer', example: 1 },
+                      limit: { type: 'integer', example: 25 },
+                      total: { type: 'integer', example: 42 },
+                      totalPages: { type: 'integer', example: 2 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/movement-events/{id}': {
+    get: {
+      tags: ['Movement Events'],
+      summary: 'Get movement event by ID',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Movement event ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Movement event detail',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/MovementEvent' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Movement event not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/movement-events/simulate': {
+    post: {
+      tags: ['Movement Events'],
+      summary: 'Create a test movement event for development',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['asset_tag_uid', 'gate_id'],
+              properties: {
+                asset_tag_uid: { type: 'string', example: 'RFID-E200-34161B5A8C7D' },
+                gate_id: { type: 'integer', example: 5 },
+                event_type: { type: 'string', example: 'ENTER', description: 'ENTER or EXIT' },
+                signal_strength: { type: 'integer', example: -65 }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Simulated event created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Simulated movement event created' },
+                  data: { $ref: '#/components/schemas/MovementEvent' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
 };
