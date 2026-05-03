@@ -1,27 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Plus, Edit, Trash2, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from '@/icons/lucideMuiAdapter';
-import * as branchAPI from '@/services/branchService';
+import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { type AppDispatch, type RootState } from '../../store';
+import {
+  createBranch,
+  deactivateBranch,
+  fetchBranches,
+  reactivateBranch,
+  selectBranches,
+  selectBranchesError,
+  selectBranchesLoading,
+  selectBranchesPagination,
+  updateBranch,
+} from '../../store/slices/branchSlice';
 import * as organizationAPI from '@/services/organizationService';
+import type { Branch } from '../../services/branchService';
 import { BranchForm } from './branch-form';
-
-interface Branch {
-  id: number;
-  organization_id: number;
-  name: string;
-  city: string;
-  status: string;
-  created_at: string;
-  updated_at: string;
-  organization?: {
-    id: number;
-    name: string;
-  };
-  _count?: {
-    buildings: number;
-  };
-}
 
 interface Organization {
   id: number;
@@ -29,18 +26,20 @@ interface Organization {
 }
 
 export const BranchManagement = () => {
-  const [branches, setBranches] = useState<Branch[]>([]);
+  const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
+  const branches = useSelector((state: RootState) => selectBranches(state));
+  const loading = useSelector((state: RootState) => selectBranchesLoading(state));
+  const error = useSelector((state: RootState) => selectBranchesError(state));
+  const pagination = useSelector((state: RootState) => selectBranchesPagination(state));
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [expandedBranch, setExpandedBranch] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [includeInactive, setIncludeInactive] = useState(false);
   
   // Form states
   const [showForm, setShowForm] = useState(false);
-  const [formLoading, setFormLoading] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | undefined>();
   
   // Delete confirmation
@@ -65,48 +64,20 @@ export const BranchManagement = () => {
     }
   };
 
-  // Fetch branches
-  const fetchBranches = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await branchAPI.getBranches(page, 10, searchTerm, undefined, includeInactive);
-      if (response.success && Array.isArray(response.data)) {
-        setBranches(response.data);
-      }
-    } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
-      console.error('Error fetching branches:', message, err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchOrganizations();
   }, []);
 
   useEffect(() => {
-    fetchBranches();
-  }, [page, includeInactive]);
-
-  // Handle search
-  const handleSearch = async (term: string) => {
-    setSearchTerm(term);
-    setPage(1);
-    try {
-      setLoading(true);
-      const response = await branchAPI.getBranches(1, 10, term, undefined, includeInactive);
-      if (response.success && Array.isArray(response.data)) {
-        setBranches(response.data);
-      }
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(
+      fetchBranches({
+        page,
+        limit: 10,
+        search: searchTerm.trim(),
+        includeInactive,
+      }),
+    );
+  }, [dispatch, page, searchTerm, includeInactive]);
 
   // Handle create/edit
   const handleOpenForm = (branch?: Branch) => {
@@ -116,66 +87,43 @@ export const BranchManagement = () => {
 
   const handleSubmitForm = async (data: { organization_id: number; name: string; city: string }) => {
     try {
-      setFormLoading(true);
-      
       if (editingBranch) {
-        // Update
-        const response = await branchAPI.updateBranch(editingBranch.id, {
-          name: data.name,
-          city: data.city,
-        });
-        if (response.success) {
-          setBranches(branches =>
-            branches.map(branch => branch.id === editingBranch.id ? (response.data as Branch) : branch)
-          );
-        }
+        await dispatch(
+          updateBranch({
+            id: editingBranch.id,
+            data: {
+              name: data.name,
+              city: data.city,
+            },
+          }),
+        ).unwrap();
       } else {
-        // Create
-        const response = await branchAPI.createBranch(data);
-        if (response.success) {
-          setBranches(branches => [(response.data as Branch), ...branches]);
-        }
+        await dispatch(createBranch(data)).unwrap();
       }
       
       setShowForm(false);
       setEditingBranch(undefined);
     } catch (err) {
       throw err;
-    } finally {
-      setFormLoading(false);
     }
   };
 
   // Handle delete
   const handleDelete = async (id: number) => {
     try {
-      setFormLoading(true);
-      await branchAPI.deactivateBranch(id);
-      // Update the branch to show as inactive instead of removing
-      setBranches(branches =>
-        branches.map(branch => branch.id === id ? { ...branch, status: 'INACTIVE' } : branch)
-      );
+      await dispatch(deactivateBranch(id)).unwrap();
       setDeleteConfirm(null);
     } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setFormLoading(false);
+      console.error('Error deactivating branch:', getErrorMessage(err));
     }
   };
 
   // Handle reactivate
   const handleReactivate = async (id: number) => {
     try {
-      setFormLoading(true);
-      await branchAPI.reactivateBranch(id);
-      // Update the branch to show as active
-      setBranches(branches =>
-        branches.map(branch => branch.id === id ? { ...branch, status: 'ACTIVE' } : branch)
-      );
+      await dispatch(reactivateBranch(id)).unwrap();
     } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setFormLoading(false);
+      console.error('Error reactivating branch:', getErrorMessage(err));
     }
   };
 
@@ -200,11 +148,17 @@ export const BranchManagement = () => {
             type="text"
             placeholder="Search branches by name or city..."
             value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
+            onChange={(e) => {
+              setPage(1);
+              setSearchTerm(e.target.value);
+            }}
             className="flex-1 px-3 py-2 border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
           />
           <button
-            onClick={() => setIncludeInactive(!includeInactive)}
+            onClick={() => {
+              setPage(1);
+              setIncludeInactive((current) => !current);
+            }}
             className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
               includeInactive
                 ? 'bg-[var(--brand-600)] text-white'
@@ -296,6 +250,13 @@ export const BranchManagement = () => {
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
                         <button
+                          onClick={() => navigate(`/branches/${branch.id}/map`)}
+                          title="Edit Map"
+                          className="rounded-md border border-[var(--surface-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all"
+                        >
+                          Map
+                        </button>
+                        <button
                           onClick={() => handleOpenForm(branch)}
                           title="Edit"
                           className="p-2 rounded-md text-[var(--text-muted)] hover:bg-blue-500/10 hover:text-blue-600 transition-all"
@@ -344,7 +305,7 @@ export const BranchManagement = () => {
       {/* Branch Form Modal */}
       <BranchForm
         isOpen={showForm}
-        isLoading={formLoading}
+        isLoading={loading}
         organizations={organizations}
         initialData={editingBranch}
         onSubmit={handleSubmitForm}
@@ -354,6 +315,28 @@ export const BranchManagement = () => {
         }}
         title={editingBranch ? 'Edit Branch' : 'Create Branch'}
       />
+
+      <div className="flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
+        <span>
+          Page {pagination.page} of {pagination.totalPages} · {pagination.total} branch(es)
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setPage((current) => Math.max(1, current - 1))}
+            disabled={page <= 1 || loading}
+            className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <button
+            onClick={() => setPage((current) => Math.min(pagination.totalPages || current + 1, current + 1))}
+            disabled={loading || page >= (pagination.totalPages || 1)}
+            className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
@@ -375,17 +358,17 @@ export const BranchManagement = () => {
               <div className="flex gap-3">
                 <button
                   onClick={() => setDeleteConfirm(null)}
-                  disabled={formLoading}
+                  disabled={loading}
                   className="flex-1 px-4 py-2 border border-[var(--surface-border)] rounded-md text-[var(--text-primary)] font-medium hover:bg-[var(--surface-1)] disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={() => handleDelete(deleteConfirm)}
-                  disabled={formLoading}
+                  disabled={loading}
                   className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md font-medium hover:bg-red-700 disabled:opacity-50"
                 >
-                  {formLoading ? 'Deactivating...' : 'Deactivate'}
+                  {loading ? 'Deactivating...' : 'Deactivate'}
                 </button>
               </div>
             </motion.div>

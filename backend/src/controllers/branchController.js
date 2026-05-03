@@ -187,3 +187,55 @@ export const reactivateBranch = async (req, res) => {
     });
   }
 };
+
+/**
+ * Get branch map data
+ * GET /api/branches/:id/map
+ */
+export const getBranchMap = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await branchService.getBranchMap(id);
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Get branch map error:', error);
+
+    if (error.message === 'Branch not found') {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch branch map',
+    });
+  }
+};
+
+/**
+ * Update branch map data
+ * PUT /api/branches/:id/map
+ */
+export const updateBranchMap = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await branchService.updateBranchMap(id, req.body || {});
+    res.status(200).json(result);
+  } catch (error) {
+    console.error('Update branch map error:', error);
+
+    if (error.message === 'Branch not found') {
+      return res.status(404).json({
+        success: false,
+        message: error.message,
+      });
+    }
+
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to update branch map',
+    });
+  }
+};
