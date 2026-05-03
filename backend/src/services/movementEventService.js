@@ -6,6 +6,16 @@ const toIntOrNull = (value) => {
   return Number.isInteger(parsed) ? parsed : null;
 };
 
+const requireInt = (value, fieldName) => {
+  const parsed = toIntOrNull(value);
+  if (parsed === null) {
+    const error = new Error(`Invalid ${fieldName}`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return parsed;
+};
+
 const movementEventSelect = {
   id: true,
   asset_id: true,
@@ -58,7 +68,7 @@ export const recordMovementEvent = async (organizationId, normalizedEvent) => {
     throw error;
   }
 
-  const orgId = toIntOrNull(organizationId);
+  const orgId = requireInt(organizationId, 'organization_id');
 
   // Find asset by tag uid within organization
   const asset = await prisma.asset.findFirst({
@@ -78,8 +88,13 @@ export const recordMovementEvent = async (organizationId, normalizedEvent) => {
     throw error;
   }
 
-  // Gate lookup - gate id may be numeric or string
-  const gateId = toIntOrNull(normalizedEvent.gateId) || normalizedEvent.gateId;
+  const gateId = toIntOrNull(normalizedEvent.gateId);
+
+  if (gateId === null) {
+    const error = new Error('Invalid gate_id');
+    error.statusCode = 400;
+    throw error;
+  }
 
   const gate = await prisma.gate.findFirst({ where: { id: gateId }, select: { id: true, zone_id: true, is_active: true } });
 
@@ -96,7 +111,13 @@ export const recordMovementEvent = async (organizationId, normalizedEvent) => {
   }
 
   const zoneToId = gate.zone_id;
-  const zoneFromId = asset.last_seen_zone_id || null;
+  const zoneFromId = toIntOrNull(asset.last_seen_zone_id);
+
+  if (zoneFromId === null) {
+    const error = new Error('Asset has no last_seen_zone_id; cannot create movement event with required zone_from_id');
+    error.statusCode = 400;
+    throw error;
+  }
 
   const eventTime = normalizedEvent.eventTime || new Date();
   const eventType = normalizedEvent.eventType || 'ENTER';
@@ -126,14 +147,31 @@ export const recordMovementEvent = async (organizationId, normalizedEvent) => {
 };
 
 export const listMovementEvents = async (organizationId, filters = {}) => {
-  const orgId = toIntOrNull(organizationId);
+  const orgId = requireInt(organizationId, 'organization_id');
 
   const where = {
     asset: { organization_id: orgId },
   };
 
-  if (filters.asset_id) where.asset_id = toIntOrNull(filters.asset_id);
-  if (filters.gate_id) where.gate_id = toIntOrNull(filters.gate_id);
+  if (filters.asset_id !== undefined && filters.asset_id !== null && filters.asset_id !== '') {
+    const assetId = toIntOrNull(filters.asset_id);
+    if (assetId === null) {
+      const error = new Error('Invalid asset_id filter');
+      error.statusCode = 400;
+      throw error;
+    }
+    where.asset_id = assetId;
+  }
+
+  if (filters.gate_id !== undefined && filters.gate_id !== null && filters.gate_id !== '') {
+    const gateId = toIntOrNull(filters.gate_id);
+    if (gateId === null) {
+      const error = new Error('Invalid gate_id filter');
+      error.statusCode = 400;
+      throw error;
+    }
+    where.gate_id = gateId;
+  }
   if (filters.event_type) where.event_type = filters.event_type;
   if (filters.trigger_source) where.trigger_source = filters.trigger_source;
 
@@ -165,7 +203,7 @@ export const listMovementEvents = async (organizationId, filters = {}) => {
 
 export const getMovementEventById = async (id, organizationId) => {
   const normalizedId = toIntOrNull(id);
-  const orgId = toIntOrNull(organizationId);
+  const orgId = requireInt(organizationId, 'organization_id');
 
   if (normalizedId === null) return null;
 

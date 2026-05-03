@@ -19,6 +19,11 @@ export const handleRfidWebhook = async (req, res) => {
         continue;
       }
 
+      if (normalized.gateId === undefined || normalized.gateId === null || normalized.gateId === '') {
+        results.push({ success: false, message: 'gate_id is required for webhook', raw: rec });
+        continue;
+      }
+
       // For webhook, organization context may not exist; require org_id in payload
       const orgId = req.body.organization_id || rec.organization_id || req.query.organization_id;
 
@@ -46,7 +51,7 @@ export const getAllMovementEvents = async (req, res) => {
     const data = await movementService.listMovementEvents(req.organization_id, req.query);
     res.status(200).json({ success: true, data: data.data, pagination: data.pagination });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch movement events' });
+    res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Failed to fetch movement events' });
   }
 };
 
@@ -58,7 +63,7 @@ export const getMovementEventById = async (req, res) => {
     }
     res.status(200).json({ success: true, data: event });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message || 'Failed to fetch movement event' });
+    res.status(error.statusCode || 500).json({ success: false, message: error.message || 'Failed to fetch movement event' });
   }
 };
 

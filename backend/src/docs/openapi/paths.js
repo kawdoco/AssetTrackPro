@@ -1227,12 +1227,24 @@ export const paths = {
                   results: {
                     type: 'array',
                     items: {
-                      type: 'object',
-                      properties: {
-                        success: { type: 'boolean', example: true },
-                        data: { $ref: '#/components/schemas/MovementEvent' },
-                        message: { type: 'string', example: 'Processed' }
-                      }
+                      oneOf: [
+                        {
+                          type: 'object',
+                          required: ['success', 'data'],
+                          properties: {
+                            success: { type: 'boolean', enum: [true], example: true },
+                            data: { $ref: '#/components/schemas/MovementEvent' }
+                          }
+                        },
+                        {
+                          type: 'object',
+                          required: ['success', 'message'],
+                          properties: {
+                            success: { type: 'boolean', enum: [false], example: false },
+                            message: { type: 'string', example: 'Asset not found' }
+                          }
+                        }
+                      ]
                     }
                   }
                 }

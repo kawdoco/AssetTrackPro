@@ -122,7 +122,7 @@ export const components = {
         id: { type: 'integer', example: 101 },
         asset_id: { type: 'integer', example: 15 },
         gate_id: { type: 'integer', example: 5 },
-        zone_from_id: { type: 'integer', nullable: true, example: 4 },
+        zone_from_id: { type: 'integer', example: 4 },
         zone_to_id: { type: 'integer', example: 7 },
         event_type: { type: 'string', example: 'ENTER' },
         event_time: { type: 'string', format: 'date-time' },
@@ -139,13 +139,13 @@ export const components = {
             direction: { type: 'string', example: 'BOTH' }
           }
         },
-        zone_from: { allOf: [{ $ref: '#/components/schemas/ZoneSummary' }], nullable: true },
+        zone_from: { $ref: '#/components/schemas/ZoneSummary' },
         zone_to: { $ref: '#/components/schemas/ZoneSummary' }
       }
     },
     MovementEventWebhookRequest: {
       type: 'object',
-      required: ['organization_id'],
+      required: ['organization_id', 'tag_epc', 'gate_id'],
       properties: {
         organization_id: { type: 'integer', example: 1 },
         tag_epc: { type: 'string', example: '3066412B5FA9F46D01000000' },
