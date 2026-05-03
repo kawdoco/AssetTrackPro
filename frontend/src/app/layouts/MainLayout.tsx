@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { Sidebar } from "../components/sidebar";
 import { TopBar } from "../components/top-bar";
 import { ActionModal } from "../components/modals";
-import { TabId, ModalType } from "../../utils/routes";
+import type { TabId, ModalType } from "../../utils/routes";
 
 export const MainLayout: React.FC = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabId>("dashboard");
+  const location = useLocation();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -20,8 +20,19 @@ export const MainLayout: React.FC = () => {
     type: "asset",
   });
 
+  const activeTab: TabId = (() => {
+    const pathname = location.pathname;
+    if (pathname === "/" || pathname === "") return "dashboard";
+    if (pathname.startsWith("/assets")) return "assets";
+    if (pathname.startsWith("/employees")) return "employees";
+    if (pathname.startsWith("/organizations")) return "organizations";
+    if (pathname.startsWith("/branches")) return "branches";
+    if (pathname.startsWith("/alerts")) return "alerts";
+    if (pathname.startsWith("/reports")) return "reports";
+    return "settings";
+  })();
+
   const handleTabChange = (tab: TabId) => {
-    setActiveTab(tab);
     navigate(tab === "dashboard" ? "/" : `/${tab}`);
   };
 
@@ -47,7 +58,6 @@ export const MainLayout: React.FC = () => {
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
         onLogout={() => {
-          setActiveTab("dashboard");
           navigate("/login");
         }}
       />

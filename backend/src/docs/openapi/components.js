@@ -67,8 +67,8 @@ export const components = {
       type: 'object',
       properties: {
         id: { type: 'integer', example: 4 },
-        zone_name: { type: 'string', example: 'Warehouse A' },
-        zone_type: { type: 'string', example: 'STORAGE' }
+        zone_name: { type: 'string', example: 'Zone A' },
+        zone_type: { type: 'string', nullable: true, example: 'STORAGE' }
       }
     },
     Asset: {
@@ -159,6 +159,141 @@ export const components = {
       properties: {
         name: { type: 'string', example: 'Acme Logistics Global' },
         industry_type: { type: 'string', nullable: true, example: 'Supply Chain' }
+      }
+    },
+    BranchOrganizationSummary: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 1 },
+        name: { type: 'string', example: 'Default Organization' }
+      }
+    },
+    BranchBuildingSummary: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 12 },
+        name: { type: 'string', example: 'Warehouse 12' },
+        zone_count: { type: 'integer', example: 4 }
+      }
+    },
+    Branch: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 4 },
+        organization_id: { type: 'integer', example: 1 },
+        name: { type: 'string', example: 'HQ Branch' },
+        city: { type: 'string', example: 'Singapore' },
+        status: { type: 'string', example: 'ACTIVE' },
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
+        organization: { $ref: '#/components/schemas/BranchOrganizationSummary' },
+        _count: {
+          type: 'object',
+          properties: {
+            buildings: { type: 'integer', example: 3 }
+          }
+        }
+      }
+    },
+    BranchCreateRequest: {
+      type: 'object',
+      required: ['organization_id', 'name', 'city'],
+      properties: {
+        organization_id: { type: 'integer', example: 1 },
+        name: { type: 'string', example: 'HQ Branch' },
+        city: { type: 'string', example: 'Singapore' }
+      }
+    },
+    BranchUpdateRequest: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'HQ Branch' },
+        city: { type: 'string', example: 'Singapore' },
+        status: { type: 'string', example: 'ACTIVE' }
+      }
+    },
+    BranchDetail: {
+      allOf: [{ $ref: '#/components/schemas/Branch' }],
+      properties: {
+        buildings: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/BranchBuildingSummary' }
+        }
+      }
+    },
+    Building: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 12 },
+        branch_id: { type: 'integer', example: 4 },
+        name: { type: 'string', example: 'Warehouse 12' },
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
+        branch: { $ref: '#/components/schemas/BranchOrganizationSummary' },
+        zones: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/ZoneSummary' }
+        }
+      }
+    },
+    BuildingCreateRequest: {
+      type: 'object',
+      required: ['branch_id', 'name'],
+      properties: {
+        branch_id: { type: 'integer', example: 4 },
+        name: { type: 'string', example: 'Warehouse 12' }
+      }
+    },
+    BuildingUpdateRequest: {
+      type: 'object',
+      properties: {
+        branch_id: { type: 'integer', example: 4 },
+        name: { type: 'string', example: 'Warehouse 12' }
+      }
+    },
+    EmployeeOrganizationSummary: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 1 },
+        name: { type: 'string', example: 'Default Organization' }
+      }
+    },
+    Employee: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 8 },
+        organization_id: { type: 'integer', example: 1 },
+        employee_code: { type: 'string', example: 'EMP-001' },
+        name: { type: 'string', example: 'Jane Doe' },
+        email: { type: 'string', format: 'email', nullable: true, example: 'jane.doe@example.com' },
+        status: { type: 'string', example: 'ACTIVE' },
+        is_active: { type: 'boolean', example: true },
+        created_at: { type: 'string', format: 'date-time' },
+        updated_at: { type: 'string', format: 'date-time' },
+        organization: { $ref: '#/components/schemas/EmployeeOrganizationSummary' }
+      }
+    },
+    EmployeeCreateRequest: {
+      type: 'object',
+      required: ['employee_code', 'name'],
+      properties: {
+        organization_id: { type: 'integer', example: 1 },
+        employee_code: { type: 'string', example: 'EMP-001' },
+        name: { type: 'string', example: 'Jane Doe' },
+        email: { type: 'string', format: 'email', nullable: true, example: 'jane.doe@example.com' },
+        status: { type: 'string', example: 'ACTIVE' },
+        is_active: { type: 'boolean', example: true }
+      }
+    },
+    EmployeeUpdateRequest: {
+      type: 'object',
+      properties: {
+        organization_id: { type: 'integer', example: 1 },
+        employee_code: { type: 'string', example: 'EMP-001' },
+        name: { type: 'string', example: 'Jane Doe' },
+        email: { type: 'string', format: 'email', nullable: true, example: 'jane.doe@example.com' },
+        status: { type: 'string', example: 'ACTIVE' },
+        is_active: { type: 'boolean', example: true }
       }
     }
   }

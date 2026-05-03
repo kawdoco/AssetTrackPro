@@ -110,3 +110,89 @@ export const deleteAsset = async (req, res) => {
     });
   }
 };
+
+export const getAssetAssignments = async (req, res) => {
+  try {
+    const assignments = await assetService.listAssetAssignments(
+      req.params.id,
+      req.organization_id,
+      req.query,
+    );
+
+    if (!assignments) {
+      return res.status(404).json({
+        success: false,
+        message: 'Asset not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: assignments,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to fetch asset assignments',
+    });
+  }
+};
+
+export const assignAssetToEmployee = async (req, res) => {
+  try {
+    const { employee_id } = req.body;
+
+    if (!employee_id) {
+      return res.status(400).json({
+        success: false,
+        message: 'employee_id is required',
+      });
+    }
+
+    const assignment = await assetService.assignAssetToEmployee(
+      req.params.id,
+      req.organization_id,
+      req.body,
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'Asset assigned successfully',
+      data: assignment,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 400).json({
+      success: false,
+      message: error.message || 'Failed to assign asset',
+    });
+  }
+};
+
+export const returnAssetAssignment = async (req, res) => {
+  try {
+    const assignment = await assetService.returnAssetAssignment(
+      req.params.id,
+      req.params.assignmentId,
+      req.organization_id,
+      req.body,
+    );
+
+    if (!assignment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Asset assignment not found',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Asset assignment returned successfully',
+      data: assignment,
+    });
+  } catch (error) {
+    res.status(error.statusCode || 400).json({
+      success: false,
+      message: error.message || 'Failed to return asset assignment',
+    });
+  }
+};

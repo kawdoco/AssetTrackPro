@@ -13,7 +13,9 @@ export const openApiSpec = {
     { name: 'Health' },
     { name: 'Auth' },
     { name: 'Assets' },
-    { name: 'Organizations' }
+    { name: 'Organizations' },
+    { name: 'Branches' },
+    { name: 'Employees' }
   ],
   components,
   paths

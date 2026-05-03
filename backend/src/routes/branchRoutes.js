@@ -25,6 +25,7 @@ router.get('/', authenticate, authorize('ADMIN', 'MANAGER', 'SECURITY'), branchC
  * Required role: ADMIN, MANAGER, SECURITY
  */
 router.get('/:id', authenticate, authorize('ADMIN', 'MANAGER', 'SECURITY'), branchController.getBranchById);
+router.get('/:id/map', authenticate, authorize('ADMIN', 'MANAGER', 'SECURITY'), branchController.getBranchMap);
 
 /**
  * PUT /api/branches/:id
@@ -32,6 +33,7 @@ router.get('/:id', authenticate, authorize('ADMIN', 'MANAGER', 'SECURITY'), bran
  * Required role: ADMIN, MANAGER
  */
 router.put('/:id', authenticate, authorize('ADMIN', 'MANAGER'), branchController.updateBranch);
+router.put('/:id/map', authenticate, authorize('ADMIN', 'MANAGER'), branchController.updateBranchMap);
 
 /**
  * DELETE /api/branches/:id

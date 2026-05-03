@@ -1,5 +1,168 @@
 import prisma from '../config/prisma.js';
 
+const branchInclude = {
+  organization: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+  _count: {
+    select: {
+      buildings: true,
+    },
+  },
+};
+
+const branchMapSelect = {
+  id: true,
+  organization_id: true,
+  name: true,
+  city: true,
+  status: true,
+  map_center_lat: true,
+  map_center_lng: true,
+  map_zoom: true,
+  boundary_points: true,
+  gate_markers: true,
+  map_updated_at: true,
+  created_at: true,
+  updated_at: true,
+  organization: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+};
+
+const normalizeCoordinate = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizeZoom = (value, fallback = 17) => {
+  if (value === null || value === undefined || value === '') {
+    return fallback;
+  }
+
+  const parsed = Number.parseInt(value, 10);
+  return Number.isInteger(parsed) ? parsed : fallback;
+};
+
+const clampGateRadius = (value) => {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return 25;
+  }
+
+  return Math.max(20, Math.min(30, parsed));
+};
+
+const normalizePolygonPoints = (points) => {
+  if (!Array.isArray(points) || points.length === 0) {
+    return null;
+  }
+
+  const normalizedPoints = points
+    .map((point) => ({
+      lat: normalizeCoordinate(point?.lat),
+      lng: normalizeCoordinate(point?.lng),
+    }))
+    .filter((point) => point.lat !== null && point.lng !== null);
+
+  return normalizedPoints.length >= 3 ? normalizedPoints : null;
+};
+
+const normalizeBoundaryPayload = (payload) => {
+  if (!payload) {
+    return null;
+  }
+
+  if (Array.isArray(payload)) {
+    const points = normalizePolygonPoints(payload);
+    return points ? { type: 'polygon', points } : null;
+  }
+
+  if (payload.type === 'polygon') {
+    const points = normalizePolygonPoints(payload.points);
+    return points ? { type: 'polygon', points } : null;
+  }
+
+  if (payload.type === 'rectangle') {
+    const north = normalizeCoordinate(payload?.bounds?.north);
+    const south = normalizeCoordinate(payload?.bounds?.south);
+    const east = normalizeCoordinate(payload?.bounds?.east);
+    const west = normalizeCoordinate(payload?.bounds?.west);
+
+    if ([north, south, east, west].some((value) => value === null)) {
+      return null;
+    }
+
+    if (north <= south || east <= west) {
+      return null;
+    }
+
+    return {
+      type: 'rectangle',
+      bounds: { north, south, east, west },
+    };
+  }
+
+  if (payload.type === 'circle') {
+    const lat = normalizeCoordinate(payload?.center?.lat);
+    const lng = normalizeCoordinate(payload?.center?.lng);
+    const radius_m = Math.max(1, Number(payload?.radius_m) || 0);
+
+    if (lat === null || lng === null || !Number.isFinite(radius_m)) {
+      return null;
+    }
+
+    return {
+      type: 'circle',
+      center: { lat, lng },
+      radius_m,
+    };
+  }
+
+  return null;
+};
+
+const normalizeGateMarkers = (markers) => {
+  if (!Array.isArray(markers) || markers.length === 0) {
+    return [];
+  }
+
+  return markers
+    .map((marker, index) => {
+      const lat = normalizeCoordinate(marker?.lat);
+      const lng = normalizeCoordinate(marker?.lng);
+
+      if (lat === null || lng === null) {
+        return null;
+      }
+
+      const name = typeof marker?.name === 'string' && marker.name.trim()
+        ? marker.name.trim()
+        : `Gate ${index + 1}`;
+
+      return {
+        id: typeof marker?.id === 'string' && marker.id.trim() ? marker.id.trim() : `gate-${Date.now()}-${index}`,
+        name,
+        type: typeof marker?.type === 'string' && marker.type.trim() ? marker.type.trim() : 'BOTH',
+        lat,
+        lng,
+        radius_m: clampGateRadius(marker?.radius_m),
+      };
+    })
+    .filter(Boolean);
+};
+
 /**
  * Create a new branch
  * @param {Object} branchData - Branch data
@@ -48,20 +211,9 @@ export const createBranch = async (branchData) => {
       name: name.trim(),
       city: city.trim(),
       status: 'ACTIVE',
+      map_zoom: 17,
     },
-    include: {
-      organization: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          buildings: true,
-        },
-      },
-    },
+    include: branchInclude,
   });
 
   return {
@@ -111,19 +263,7 @@ export const getBranches = async (params = {}) => {
   const [branches, total] = await Promise.all([
     prisma.branch.findMany({
       where: whereClause,
-      include: {
-        organization: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        _count: {
-          select: {
-            buildings: true,
-          },
-        },
-      },
+      include: branchInclude,
       skip,
       take: parseInt(limit),
       orderBy: {
@@ -154,12 +294,7 @@ export const getBranchById = async (branchId) => {
   const branch = await prisma.branch.findUnique({
     where: { id: parseInt(branchId) },
     include: {
-      organization: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
+      organization: branchInclude.organization,
       buildings: {
         include: {
           _count: {
@@ -227,19 +362,7 @@ export const updateBranch = async (branchId, updateData) => {
       ...(city ? { city: city.trim() } : {}),
       ...(status ? { status } : {}),
     },
-    include: {
-      organization: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          buildings: true,
-        },
-      },
-    },
+    include: branchInclude,
   });
 
   return {
@@ -270,19 +393,7 @@ export const deactivateBranch = async (branchId) => {
   const deactivated = await prisma.branch.update({
     where: { id: parseInt(branchId) },
     data: { status: 'INACTIVE' },
-    include: {
-      organization: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          buildings: true,
-        },
-      },
-    },
+    include: branchInclude,
   });
 
   return {
@@ -313,24 +424,74 @@ export const reactivateBranch = async (branchId) => {
   const reactivated = await prisma.branch.update({
     where: { id: parseInt(branchId) },
     data: { status: 'ACTIVE' },
-    include: {
-      organization: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          buildings: true,
-        },
-      },
-    },
+    include: branchInclude,
   });
 
   return {
     success: true,
     data: reactivated,
     message: 'Branch reactivated successfully',
+  };
+};
+
+/**
+ * Get branch map data
+ * @param {number} branchId - Branch ID
+ * @returns {Object} Branch map payload
+ */
+export const getBranchMap = async (branchId) => {
+  const branch = await prisma.branch.findUnique({
+    where: { id: parseInt(branchId) },
+    select: branchMapSelect,
+  });
+
+  if (!branch) {
+    throw new Error('Branch not found');
+  }
+
+  return {
+    success: true,
+    data: branch,
+  };
+};
+
+/**
+ * Update branch map data
+ * @param {number} branchId - Branch ID
+ * @param {Object} mapData - Map editor payload
+ * @returns {Object} Updated branch map payload
+ */
+export const updateBranchMap = async (branchId, mapData) => {
+  const existingBranch = await prisma.branch.findUnique({
+    where: { id: parseInt(branchId) },
+    select: { id: true, map_zoom: true },
+  });
+
+  if (!existingBranch) {
+    throw new Error('Branch not found');
+  }
+
+  const boundaryPoints = normalizeBoundaryPayload(mapData.boundary_points);
+  const gateMarkers = normalizeGateMarkers(mapData.gate_markers);
+  const centerLat = normalizeCoordinate(mapData.map_center_lat);
+  const centerLng = normalizeCoordinate(mapData.map_center_lng);
+
+  const updatedBranch = await prisma.branch.update({
+    where: { id: parseInt(branchId) },
+    data: {
+      map_center_lat: centerLat,
+      map_center_lng: centerLng,
+      map_zoom: normalizeZoom(mapData.map_zoom, existingBranch.map_zoom ?? 17),
+      boundary_points: boundaryPoints,
+      gate_markers: gateMarkers,
+      map_updated_at: new Date(),
+    },
+    select: branchMapSelect,
+  });
+
+  return {
+    success: true,
+    data: updatedBranch,
+    message: 'Branch map updated successfully',
   };
 };
