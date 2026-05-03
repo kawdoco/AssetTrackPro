@@ -8,6 +8,7 @@ import organizationRoutes from './routes/organizationRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
 import buildingRoutes from './routes/buildingRoutes.js';
+import zoneRoutes from './routes/zoneRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -28,9 +29,10 @@ app.get('/', (_req, res) => res.json({ message: 'AssetTrackPro API v1', online: 
 app.use('/api/auth', authRoutes);
 app.use('/api/organizations', organizationRoutes);
 app.use('/api/branches', branchRoutes);
+app.use('/api/buildings', buildingRoutes);
+app.use('/api/zones', zoneRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/employees', employeeRoutes);
-app.use('/api/buildings', buildingRoutes);
 
 // --- Global error handler -----------------------------------------------------
 app.use(errorHandler);
