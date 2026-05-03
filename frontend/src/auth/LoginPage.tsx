@@ -90,8 +90,8 @@ function LeftPanel({ accent }: { accent: string }) {
           className="flex items-center gap-3 px-5 py-3 rounded-xl mb-8"
           style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
         >
-          <img src={logo} alt="TrackPro" className="w-7 h-7 object-contain" />
-          <span className="text-xl font-bold tracking-tight">TrackPro</span>
+          <img src={logo} alt="AssetTrackPro" className="w-7 h-7 object-contain" />
+          <span className="text-xl font-bold tracking-tight">AssetTrackPro</span>
         </div>
 
         <h1 className="text-4xl font-bold leading-tight tracking-tight mb-4">
@@ -225,7 +225,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                       Select your role
                     </h2>
                     <p className="text-sm" style={{ color: textSec }}>
-                      Choose how you're accessing TrackPro
+                      Choose how you're accessing AssetTrackPro
                     </p>
                   </div>
 
@@ -442,7 +442,7 @@ function Footer({ textSec }: { textSec: string }) {
       className="flex items-center justify-center gap-2 mt-6 pt-5 border-t text-[12px]"
       style={{ color: textSec, borderColor: '#E2E8F0' }}
     >
-      <span>© 2026 TrackPro · Fleet Intelligence</span>
+      <span>© 2026 AssetTrackPro · Fleet Intelligence</span>
       <span>·</span>
       <a href="#" className="font-medium hover:underline" style={{ color: textSec }}>Privacy</a>
       <span>·</span>
