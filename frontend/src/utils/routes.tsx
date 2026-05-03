@@ -8,6 +8,7 @@ import Settings from "../app/components/settings";
 import AlertsIncidents from "../app/components/AlertsIncidents";
 import { OrganizationManagement } from "../app/components/OrganizationManagement";
 import { BranchManagement } from "../app/components/BranchManagement";
+import { BranchMapEditor } from "../app/components/branch-map-editor";
 import { StatsCard } from "../app/components/stats-card";
 import { AssetMap } from "../app/components/asset-map";
 import { QuickActions } from "../app/components/quick-actions";
@@ -167,6 +168,10 @@ export const routes = [
       {
         path: "branches",
         element: <BranchManagement />,
+      },
+      {
+        path: "branches/:id/map",
+        element: <BranchMapEditor />,
       },
       {
         path: "alerts",

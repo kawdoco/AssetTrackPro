@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
 import { MapPin, Plus, Edit, Trash2, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from '@/icons/lucideMuiAdapter';
+import { useNavigate } from 'react-router-dom';
 import * as branchAPI from '@/services/branchService';
 import * as organizationAPI from '@/services/organizationService';
 import { BranchForm } from './branch-form';
@@ -29,6 +30,7 @@ interface Organization {
 }
 
 export const BranchManagement = () => {
+  const navigate = useNavigate();
   const [branches, setBranches] = useState<Branch[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [expandedBranch, setExpandedBranch] = useState<number | null>(null);
@@ -295,6 +297,13 @@ export const BranchManagement = () => {
 
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => navigate(`/branches/${branch.id}/map`)}
+                          title="Edit Map"
+                          className="rounded-md border border-[var(--surface-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all"
+                        >
+                          Map
+                        </button>
                         <button
                           onClick={() => handleOpenForm(branch)}
                           title="Edit"

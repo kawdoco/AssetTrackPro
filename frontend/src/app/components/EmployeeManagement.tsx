@@ -504,6 +504,7 @@ export const EmployeeManagement = () => {
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <select
+                        title='org'
                         name="organization_id"
                         value={values.organization_id}
                         onChange={handleChange}
@@ -587,6 +588,7 @@ export const EmployeeManagement = () => {
                       Status
                     </label>
                     <select
+                      title="status"
                       name="status"
                       value={values.status}
                       onChange={handleChange}
@@ -608,6 +610,7 @@ export const EmployeeManagement = () => {
                       Is Active
                     </label>
                     <input
+                      title=""
                       type="checkbox"
                       checked={Boolean(values.is_active)}
                       onChange={(e) =>
