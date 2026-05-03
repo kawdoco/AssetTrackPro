@@ -9,7 +9,7 @@ export interface Branch {
   map_center_lat?: number | null;
   map_center_lng?: number | null;
   map_zoom?: number;
-  boundary_points?: MapPoint[] | null;
+  boundary_points?: BranchBoundaryPayload;
   gate_markers?: BranchGateMarker[] | null;
   map_updated_at?: string | null;
   created_at: string;
@@ -34,7 +34,68 @@ export interface BranchGateMarker {
   type: string;
   lat: number;
   lng: number;
+  radius_m?: number;
 }
+
+export interface BranchPolygonBoundary {
+  type: 'polygon';
+  points: MapPoint[];
+}
+
+export interface BranchRectangleBoundary {
+  type: 'rectangle';
+  bounds: {
+    north: number;
+    south: number;
+    east: number;
+    west: number;
+  };
+}
+
+export interface BranchCircleBoundary {
+  type: 'circle';
+  center: MapPoint;
+  radius_m: number;
+}
+
+export type BranchBoundary =
+  | BranchPolygonBoundary
+  | BranchRectangleBoundary
+  | BranchCircleBoundary;
+
+export type BranchBoundaryPayload = BranchBoundary | MapPoint[] | null | undefined;
+
+export const isLegacyPolygonPoints = (value: BranchBoundaryPayload): value is MapPoint[] =>
+  Array.isArray(value);
+
+export const normalizeBranchBoundaryPayload = (value: BranchBoundaryPayload): BranchBoundary | null => {
+  if (!value) {
+    return null;
+  }
+
+  if (isLegacyPolygonPoints(value)) {
+    return {
+      type: 'polygon',
+      points: value,
+    };
+  }
+
+  return value;
+};
+
+export const getBranchBoundaryPointCount = (value: BranchBoundaryPayload): number => {
+  const normalized = normalizeBranchBoundaryPayload(value);
+
+  if (!normalized) {
+    return 0;
+  }
+
+  if (normalized.type === 'polygon') {
+    return normalized.points.length;
+  }
+
+  return 0;
+};
 
 export interface CreateBranchData {
   organization_id: number;
@@ -64,7 +125,7 @@ export interface UpdateBranchMapData {
   map_center_lat: number | null;
   map_center_lng: number | null;
   map_zoom: number;
-  boundary_points: MapPoint[] | null;
+  boundary_points: BranchBoundaryPayload;
   gate_markers: BranchGateMarker[];
 }
 
