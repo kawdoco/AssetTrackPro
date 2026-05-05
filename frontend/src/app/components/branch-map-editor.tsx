@@ -40,7 +40,14 @@ type EditorMode =
 const buildGateId = () =>
   `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const clampGateRadius = (value: number) => Math.max(20, Math.min(30, value || DEFAULT_GATE_RADIUS));
+const clampGateRadius = (value: number) => {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return DEFAULT_GATE_RADIUS;
+  }
+
+  return Math.max(1, Math.min(100, normalized));
+};
 
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -90,6 +97,11 @@ const geocodeAddress = (geocoder: any, address: string) =>
     });
   });
 
+type PlaceSuggestion = {
+  place_id: string;
+  description: string;
+};
+
 export const BranchMapEditor: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -102,6 +114,9 @@ export const BranchMapEditor: React.FC = () => {
   const polylineRef = useRef<any>(null);
   const rectangleRef = useRef<any>(null);
   const circleRef = useRef<any>(null);
+  const searchMarkerRef = useRef<any>(null);
+  const autocompleteServiceRef = useRef<any>(null);
+  const placesServiceRef = useRef<any>(null);
   const mapClickListenerRef = useRef<any>(null);
   const overlayListenersRef = useRef<any[]>([]);
   const gateMarkersRef = useRef<any[]>([]);
@@ -115,6 +130,8 @@ export const BranchMapEditor: React.FC = () => {
   const [selectedGateId, setSelectedGateId] = useState<string | null>(null);
   const [mode, setMode] = useState<EditorMode>('pan');
   const [searchQuery, setSearchQuery] = useState('');
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const [squareSizeMeters, setSquareSizeMeters] = useState(DEFAULT_SQUARE_SIZE);
   const [circleRadiusMeters, setCircleRadiusMeters] = useState(DEFAULT_CIRCLE_RADIUS);
   const [defaultGateRadiusMeters, setDefaultGateRadiusMeters] = useState(DEFAULT_GATE_RADIUS);
@@ -137,6 +154,48 @@ export const BranchMapEditor: React.FC = () => {
     mapRef.current.setZoom(zoom);
     setMapCenter(point);
     setMapZoom(zoom);
+  };
+
+  const showSearchMarker = (maps: any, point: MapPoint) => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    if (searchMarkerRef.current?.setMap) {
+      searchMarkerRef.current.setMap(null);
+      searchMarkerRef.current = null;
+    }
+
+    searchMarkerRef.current = new maps.Marker({
+      position: point,
+      map: mapRef.current,
+      title: 'Search result',
+      animation: maps.Animation?.DROP,
+    });
+  };
+
+  const resolvePlaceSuggestion = async (suggestion: PlaceSuggestion) => {
+    if (!placesServiceRef.current) {
+      throw new Error('Places service is not available.');
+    }
+
+    return new Promise<MapPoint>((resolve, reject) => {
+      placesServiceRef.current.getDetails(
+        {
+          placeId: suggestion.place_id,
+          fields: ['geometry', 'name', 'formatted_address'],
+        },
+        (place: any, status: string) => {
+          if (status !== 'OK' || !place?.geometry?.location) {
+            reject(new Error('Could not load place details.'));
+            return;
+          }
+
+          const location = place.geometry.location;
+          resolve({ lat: location.lat(), lng: location.lng() });
+        }
+      );
+    });
   };
 
   useEffect(() => {
@@ -183,6 +242,12 @@ export const BranchMapEditor: React.FC = () => {
         });
         geocoderRef.current = new maps.Geocoder();
 
+        // Places helpers for autocomplete
+        if (maps.places) {
+          autocompleteServiceRef.current = new maps.places.AutocompleteService();
+          placesServiceRef.current = new maps.places.PlacesService(mapRef.current);
+        }
+
         maps.event.addListener(mapRef.current, 'idle', () => {
           const center = mapRef.current?.getCenter?.();
           if (!center) {
@@ -214,9 +279,51 @@ export const BranchMapEditor: React.FC = () => {
         if (mapClickListenerRef.current) {
           window.google.maps.event.removeListener(mapClickListenerRef.current);
         }
+
+        if (searchMarkerRef.current?.setMap) {
+          searchMarkerRef.current.setMap(null);
+          searchMarkerRef.current = null;
+        }
       }
     };
   }, [branchId]);
+
+  // Autocomplete suggestions as the user types.
+  useEffect(() => {
+    if (!autocompleteServiceRef.current) {
+      setPlaceSuggestions([]);
+      return;
+    }
+
+    const input = searchQuery.trim();
+    if (!input) {
+      setPlaceSuggestions([]);
+      return;
+    }
+
+    setIsSuggesting(true);
+    const handle = window.setTimeout(() => {
+      autocompleteServiceRef.current.getPlacePredictions(
+        { input },
+        (predictions: any[], status: string) => {
+          setIsSuggesting(false);
+          if (status !== 'OK' || !Array.isArray(predictions)) {
+            setPlaceSuggestions([]);
+            return;
+          }
+
+          setPlaceSuggestions(
+            predictions.slice(0, 6).map((prediction) => ({
+              place_id: prediction.place_id,
+              description: prediction.description,
+            }))
+          );
+        }
+      );
+    }, 250);
+
+    return () => window.clearTimeout(handle);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google?.maps) {
@@ -510,16 +617,55 @@ export const BranchMapEditor: React.FC = () => {
 
     try {
       setError('');
-      const results = await geocodeAddress(geocoderRef.current, searchQuery.trim());
-      const location = results[0]?.geometry?.location;
 
-      if (!location) {
+      const maps = window.google?.maps;
+      if (!maps) {
+        throw new Error('Google Maps is not loaded yet.');
+      }
+
+      // Prefer first autocomplete suggestion if available.
+      let point: MapPoint | null = null;
+      if (placeSuggestions.length > 0 && placesServiceRef.current) {
+        point = await resolvePlaceSuggestion(placeSuggestions[0]);
+      } else {
+        const results = await geocodeAddress(geocoderRef.current, searchQuery.trim());
+        const location = results[0]?.geometry?.location;
+
+        if (!location) {
+          throw new Error(`Could not find "${searchQuery}".`);
+        }
+
+        point = { lat: location.lat(), lng: location.lng() };
+      }
+
+      if (!point) {
         throw new Error(`Could not find "${searchQuery}".`);
       }
 
-      jumpMapTo({ lat: location.lat(), lng: location.lng() }, 18);
+      showSearchMarker(maps, point);
+      jumpMapTo(point, 18);
+      setPlaceSuggestions([]);
     } catch (searchError) {
       setError(getErrorMessage(searchError));
+    }
+  };
+
+  const handleSelectSuggestion = async (suggestion: PlaceSuggestion) => {
+    try {
+      setError('');
+      setSearchQuery(suggestion.description);
+      setPlaceSuggestions([]);
+
+      const maps = window.google?.maps;
+      if (!maps) {
+        throw new Error('Google Maps is not loaded yet.');
+      }
+
+      const point = await resolvePlaceSuggestion(suggestion);
+      showSearchMarker(maps, point);
+      jumpMapTo(point, 18);
+    } catch (selectError) {
+      setError(getErrorMessage(selectError));
     }
   };
 
@@ -696,6 +842,30 @@ export const BranchMapEditor: React.FC = () => {
                   placeholder="Search for a place, branch, road, or campus..."
                   className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] py-2 pl-10 pr-3 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
                 />
+
+                {placeSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-md border border-[var(--surface-border)] bg-[var(--surface-0)] shadow-lg">
+                    <ul className="max-h-64 overflow-auto py-1">
+                      {placeSuggestions.map((suggestion) => (
+                        <li key={suggestion.place_id}>
+                          <button
+                            type="button"
+                            onClick={() => void handleSelectSuggestion(suggestion)}
+                            className="w-full px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                          >
+                            {suggestion.description}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {isSuggesting && placeSuggestions.length === 0 && searchQuery.trim() && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-md border border-[var(--surface-border)] bg-[var(--surface-0)] px-3 py-2 text-xs text-[var(--text-muted)] shadow-lg">
+                    Searching...
+                  </div>
+                )}
               </div>
               <button type="submit" className={editorSecondaryButtonClass}>
                 Search
@@ -784,13 +954,13 @@ export const BranchMapEditor: React.FC = () => {
               </span>
               <input
                 type="number"
-                min={0}
+                min={1}
                 max={100}
                 value={defaultGateRadiusMeters}
                 onChange={(event) => setDefaultGateRadiusMeters(clampGateRadius(Number(event.target.value)))}
                 className="w-full bg-transparent outline-none"
               />
-              <span className="text-xs text-[var(--text-muted)]">recommended 20-30m</span>
+              <span className="text-xs text-[var(--text-muted)]">default 5m</span>
             </label>
           </div>
 
@@ -818,7 +988,7 @@ export const BranchMapEditor: React.FC = () => {
             <div className="mt-3 space-y-2 text-sm text-[var(--text-muted)]">
               <p>Use `My Location` to jump to the device location or `Search` to find a branch area quickly.</p>
               <p>`Place Points` lets you create an irregular boundary, while `Square` and `Circle` create quick site shapes with one click.</p>
-              <p>Each gate shows a 20-30m read radius so future RFID read coverage can be planned visually.</p>
+              <p>Each gate shows its read radius (default 5m) so future RFID read coverage can be planned visually.</p>
               <p>The current map center, zoom, branch boundary, and gate radii are all saved with the branch.</p>
             </div>
           </div>
@@ -860,13 +1030,13 @@ export const BranchMapEditor: React.FC = () => {
                   </label>
                   <input
                     type="number"
-                    min={20}
-                    max={30}
+                    min={1}
+                    max={100}
                     value={selectedGate.radius_m ?? DEFAULT_GATE_RADIUS}
                     onChange={(event) => handleUpdateSelectedGate({ radius_m: Number(event.target.value) })}
                     className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
                   />
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">Recommended 20-30m for future RFID read zones.</p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">Default is 5m.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm text-[var(--text-muted)]">
