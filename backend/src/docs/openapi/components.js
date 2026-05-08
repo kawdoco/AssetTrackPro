@@ -116,6 +116,47 @@ export const components = {
         last_seen_time: { type: 'string', format: 'date-time', nullable: true, example: '2026-04-29T10:30:00.000Z' }
       }
     },
+    MovementEvent: {
+      type: 'object',
+      properties: {
+        id: { type: 'integer', example: 101 },
+        asset_id: { type: 'integer', example: 15 },
+        gate_id: { type: 'integer', example: 5 },
+        zone_from_id: { type: 'integer', example: 4 },
+        zone_to_id: { type: 'integer', example: 7 },
+        event_type: { type: 'string', example: 'ENTER' },
+        event_time: { type: 'string', format: 'date-time' },
+        trigger_source: { type: 'string', example: 'RFID' },
+        signal_strength: { type: 'integer', nullable: true, example: -65 },
+        created_at: { type: 'string', format: 'date-time' },
+        asset: { $ref: '#/components/schemas/Asset' },
+        gate: {
+          type: 'object',
+          properties: {
+            id: { type: 'integer', example: 5 },
+            gate_name: { type: 'string', example: 'North Gate' },
+            zone_id: { type: 'integer', example: 7 },
+            direction: { type: 'string', example: 'BOTH' }
+          }
+        },
+        zone_from: { $ref: '#/components/schemas/ZoneSummary' },
+        zone_to: { $ref: '#/components/schemas/ZoneSummary' }
+      }
+    },
+    MovementEventWebhookRequest: {
+      type: 'object',
+      required: ['organization_id', 'tag_epc', 'gate_id'],
+      properties: {
+        organization_id: { type: 'integer', example: 1 },
+        tag_epc: { type: 'string', example: '3066412B5FA9F46D01000000' },
+        gate_id: { type: 'integer', example: 5 },
+        reader_id: { type: 'string', example: 'reader-01' },
+        rssi: { type: 'integer', example: -65 },
+        timestamp: { type: 'string', format: 'date-time', example: '2026-05-03T10:34:22Z' },
+        event_type: { type: 'string', example: 'ENTER' },
+        trigger_source: { type: 'string', example: 'RFID' }
+      }
+    },
     Organization: {
       type: 'object',
       properties: {
