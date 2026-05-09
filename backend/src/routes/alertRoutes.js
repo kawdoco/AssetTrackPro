@@ -9,7 +9,7 @@ const router = express.Router();
  * Create a new alert
  * Required role: ADMIN, MANAGER
  */
-// router.post('/', authenticate, authorize('ADMIN', 'MANAGER'), alertController.createAlert);
+router.post('/', authenticate, authorize('ADMIN', 'MANAGER'), alertController.createAlert);
 
 /**
  * GET /api/alerts
