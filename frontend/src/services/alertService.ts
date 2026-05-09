@@ -1,6 +1,26 @@
 import axiosInstance from './axiosInstance';
 
-
+export type AlertRecord = {
+  id: number;
+  alert_type: string;
+  severity: string;
+  status: string;
+  message: string;
+  created_at: string;
+  asset: {
+    id: number;
+    asset_tag_uid: string;
+    asset_type: string;
+    status: string;
+  };
+  movement_event?: {
+    id: number;
+    event_type: string;
+    event_time: string;
+    zone_from_id: number;
+    zone_to_id: number;
+  };
+};
 
 export type AlertListResponse = {
   success: boolean;
