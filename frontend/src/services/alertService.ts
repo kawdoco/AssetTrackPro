@@ -53,13 +53,3 @@ export const acknowledgeAlert = async (id: number | string) => {
   return response.data;
 };
 
-export const resolveAlert = async (
-  id: number | string,
-  resolution_notes?: string
-) => {
-  const response = await axiosInstance.patch(`/alerts/${id}/resolve`, {
-    resolution_notes,
-  });
-
-  return response.data;
-};
