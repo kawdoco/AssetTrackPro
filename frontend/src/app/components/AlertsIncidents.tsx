@@ -1,5 +1,11 @@
 import { Fragment, useEffect, useState } from "react";
 import { ChevronDown, ChevronUp } from "@/icons/lucideMuiAdapter";
+import {
+  getAlerts,
+  acknowledgeAlert,
+  resolveAlert,
+  type AlertRecord,
+} from "@/services/alertService";
 
 type Alert = {
   id: string;
@@ -10,92 +16,100 @@ type Alert = {
   priority: "High" | "Medium" | "Low";
   status: "Open" | "Acknowledged" | "Resolved";
   description: string;
+  rawId: number;
 };
 
-const STORAGE_KEY = "assettrackpro-alerts";
+const mapApiAlert = (alert: AlertRecord): Alert => {
+  const priority =
+    alert.severity === "CRITICAL"
+      ? "High"
+      : alert.severity === "HIGH"
+      ? "High"
+      : alert.severity === "MEDIUM"
+      ? "Medium"
+      : "Low";
 
-const initialAlerts: Alert[] = [
-  {
-    id: "a-01",
-    title: "Unauthorized Gate Entry",
-    asset: "Forklift #12",
-    location: "Zone B - Gate 3",
-    time: "2026-02-12 09:42 AM",
-    priority: "High",
-    status: "Open",
-    description:
-      "Asset attempted to exit through restricted gate without clearance.",
-  },
-  {
-    id: "a-02",
-    title: "Asset Movement Outside Zone",
-    asset: "Pallet #442",
-    location: "Zone A",
-    time: "2026-02-12 11:10 AM",
-    priority: "Medium",
-    status: "Open",
-    description: "RFID tag detected outside assigned operational zone.",
-  },
-  {
-    id: "a-03",
-    title: "Tag Signal Lost",
-    asset: "Scanner Unit #8",
-    location: "Warehouse",
-    time: "2026-02-11 04:30 PM",
-    priority: "Low",
-    status: "Acknowledged",
-    description: "RFID signal not detected for more than 10 minutes.",
-  },
-  {
-    id: "a-04",
-    title: "Restricted Area Access",
-    asset: "Delivery Truck #7",
-    location: "Zone D - Loading Dock",
-    time: "2026-02-13 08:15 AM",
-    priority: "High",
-    status: "Open",
-    description:
-      "Vehicle entered a restricted loading dock area without scheduled approval.",
-  },
-  {
-    id: "a-05",
-    title: "Excessive Idle Time",
-    asset: "Forklift #3",
-    location: "Zone C",
-    time: "2026-02-13 10:22 AM",
-    priority: "Medium",
-    status: "Resolved",
-    description:
-      "Asset remained idle beyond permitted operational time threshold.",
-  },
-];
+  const assetLabel = alert.asset.asset_type
+    ? `${alert.asset.asset_type} ${alert.asset.asset_tag_uid}`
+    : alert.asset.asset_tag_uid;
+
+  const location = alert.movement_event
+    ? `Zone ${alert.movement_event.zone_from_id} → ${alert.movement_event.zone_to_id}`
+    : "Unknown";
+
+  const title = alert.alert_type
+    .split("_")
+    .map((word) => word[0].toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  return {
+    id: alert.id.toString(),
+    title,
+    asset: assetLabel,
+    location,
+    time: new Date(alert.created_at).toLocaleString(),
+    priority,
+    status: alert.status as Alert["status"],
+    description: alert.message,
+    rawId: alert.id,
+  };
+};
 
 export default function AlertsIncidents() {
-  const [alerts, setAlerts] = useState<Alert[]>(() => {
-    if (typeof window === "undefined") return initialAlerts;
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      return saved ? (JSON.parse(saved) as Alert[]) : initialAlerts;
-    } catch {
-      return initialAlerts;
-    }
-  });
-
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"All" | Alert["status"]>("All");
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadAlerts = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await getAlerts({
+        status: statusFilter === "All" ? undefined : statusFilter,
+        search: search.trim() || undefined,
+        limit: 50,
+      });
+
+      setAlerts(response.data.map(mapApiAlert));
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load alerts from the server"
+      );
+      setAlerts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts));
-  }, [alerts]);
+    loadAlerts();
+  }, [statusFilter, search]);
 
-  const updateStatus = (id: string, newStatus: Alert["status"]) => {
-    setAlerts((prev) =>
-      prev.map((alert) =>
-        alert.id === id ? { ...alert, status: newStatus } : alert
-      )
-    );
+  const updateStatus = async (id: string, newStatus: Alert["status"]) => {
+    const alert = alerts.find((item) => item.id === id);
+    if (!alert) return;
+
+    try {
+      if (newStatus === "Acknowledged") {
+        await acknowledgeAlert(alert.rawId);
+      } else if (newStatus === "Resolved") {
+        await resolveAlert(alert.rawId);
+      }
+
+      await loadAlerts();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to update alert status"
+      );
+    }
   };
 
   const getPriorityStyle = (priority: string) => {
@@ -190,6 +204,12 @@ export default function AlertsIncidents() {
         </div>
       </div>
 
+      {error && (
+        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       <div className="bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] shadow-sm overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-[var(--surface-1)] text-[var(--text-muted)] text-[11px] uppercase tracking-wide">
@@ -204,7 +224,13 @@ export default function AlertsIncidents() {
           </thead>
 
           <tbody>
-            {filteredAlerts.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="px-6 py-10 text-center text-[var(--text-muted)]">
+                  Loading alerts...
+                </td>
+              </tr>
+            ) : filteredAlerts.length === 0 ? (
               <tr>
                 <td
                   colSpan={6}
