@@ -16,7 +16,7 @@ router.post('/', authenticate, authorize('ADMIN', 'MANAGER'), alertController.cr
  * Get all alerts with pagination and filtering
  * Required role: ADMIN, MANAGER
  */
-router.get('/', authenticate, authorize('ADMIN', 'MANAGER'), alertController.getAlerts);
+// router.get('/', authenticate, authorize('ADMIN', 'MANAGER'), alertController.getAlerts);
 
 /**
  * GET /api/alerts/:id
