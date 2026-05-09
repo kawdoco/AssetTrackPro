@@ -48,7 +48,10 @@ export const getAlerts = async (params: {
   return response.data;
 };
 
-
+export const acknowledgeAlert = async (id: number | string) => {
+  const response = await axiosInstance.patch(`/alerts/${id}/acknowledge`);
+  return response.data;
+};
 
 export const resolveAlert = async (
   id: number | string,
