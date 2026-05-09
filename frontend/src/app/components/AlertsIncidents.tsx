@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { ChevronDown, ChevronUp } from "@/icons/lucideMuiAdapter";
 import {
   getAlerts,
@@ -6,6 +6,8 @@ import {
   resolveAlert,
   type AlertRecord,
 } from "@/services/alertService";
+
+const PAGE_LIMIT = 20;
 
 type Alert = {
   id: string;
@@ -61,9 +63,11 @@ export default function AlertsIncidents() {
   const [statusFilter, setStatusFilter] = useState<"All" | Alert["status"]>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalAlerts, setTotalAlerts] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -73,11 +77,13 @@ export default function AlertsIncidents() {
       const response = await getAlerts({
         status: statusFilter === "All" ? undefined : statusFilter,
         search: search.trim() || undefined,
-        limit: 50,
+        page,
+        limit: PAGE_LIMIT,
       });
 
       setAlerts(response.data.map(mapApiAlert));
       setTotalAlerts(response.pagination?.total ?? response.data.length);
+      setTotalPages(response.pagination?.totalPages ?? 1);
     } catch (err) {
       setError(
         err instanceof Error
@@ -86,6 +92,7 @@ export default function AlertsIncidents() {
       );
       setAlerts([]);
       setTotalAlerts(0);
+      setTotalPages(1);
     } finally {
       setLoading(false);
     }
@@ -93,6 +100,7 @@ export default function AlertsIncidents() {
 
   const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setPage(1);
     setSearch(searchQuery.trim());
   };
 
@@ -102,7 +110,7 @@ export default function AlertsIncidents() {
 
   useEffect(() => {
     loadAlerts();
-  }, [statusFilter, search]);
+  }, [statusFilter, search, page]);
 
   const updateStatus = async (id: string, newStatus: Alert["status"]) => {
     const alert = alerts.find((item) => item.id === id);
@@ -219,9 +227,10 @@ export default function AlertsIncidents() {
 
           <select
             value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.target.value as "All" | Alert["status"])
-            }
+            onChange={(event) => {
+              setStatusFilter(event.target.value as "All" | Alert["status"]);
+              setPage(1);
+            }}
             className="w-full min-w-[160px] rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--brand-600)] outline-none"
           >
             <option value="All">All statuses</option>
@@ -385,6 +394,33 @@ export default function AlertsIncidents() {
             )}
           </tbody>
         </table>
+      </div>
+
+      <div className="mt-3 flex flex-col gap-3 bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] px-4 py-3 text-sm text-[var(--text-secondary)] sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          Showing {alerts.length === 0 ? 0 : (page - 1) * PAGE_LIMIT + 1}–{(page - 1) * PAGE_LIMIT + alerts.length} of {totalAlerts}
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+            disabled={page <= 1 || loading}
+            className="rounded-md border border-[var(--surface-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-[var(--surface-1)] transition-colors"
+          >
+            Previous
+          </button>
+          <span>
+            Page {page} of {totalPages}
+          </span>
+          <button
+            type="button"
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+            disabled={page >= totalPages || loading}
+            className="rounded-md border border-[var(--surface-border)] bg-white px-3 py-2 text-sm font-semibold text-[var(--text-primary)] disabled:cursor-not-allowed disabled:opacity-50 hover:bg-[var(--surface-1)] transition-colors"
+          >
+            Next
+          </button>
+        </div>
       </div>
     </div>
   );
