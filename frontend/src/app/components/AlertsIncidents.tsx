@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ChevronDown, ChevronUp } from "@/icons/lucideMuiAdapter";
 import {
   getAlerts,
@@ -59,9 +59,11 @@ export default function AlertsIncidents() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"All" | Alert["status"]>("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalAlerts, setTotalAlerts] = useState(0);
 
   const loadAlerts = async () => {
     setLoading(true);
@@ -75,6 +77,7 @@ export default function AlertsIncidents() {
       });
 
       setAlerts(response.data.map(mapApiAlert));
+      setTotalAlerts(response.pagination?.total ?? response.data.length);
     } catch (err) {
       setError(
         err instanceof Error
@@ -82,9 +85,19 @@ export default function AlertsIncidents() {
           : "Failed to load alerts from the server"
       );
       setAlerts([]);
+      setTotalAlerts(0);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setSearch(searchQuery.trim());
+  };
+
+  const refreshAlerts = async () => {
+    await loadAlerts();
   };
 
   useEffect(() => {
@@ -178,17 +191,32 @@ export default function AlertsIncidents() {
             <span className="px-3 py-1 rounded-full bg-green-100 text-green-600">
               Resolved: {resolvedCount}
             </span>
+            <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600">
+              Total: {totalAlerts}
+            </span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <input
-            type="search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search alerts..."
-            className="w-full min-w-[220px] rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--brand-600)] outline-none"
-          />
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex flex-col gap-3 sm:flex-row sm:items-center"
+        >
+          <div className="flex w-full gap-2">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search alerts..."
+              className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:border-[var(--brand-600)] outline-none"
+            />
+            <button
+              type="submit"
+              className="rounded-md bg-[var(--brand-600)] px-4 py-2 text-sm font-semibold text-white hover:bg-[var(--brand-700)] transition-colors"
+            >
+              Search
+            </button>
+          </div>
+
           <select
             value={statusFilter}
             onChange={(event) =>
@@ -201,7 +229,15 @@ export default function AlertsIncidents() {
             <option value="Acknowledged">Acknowledged</option>
             <option value="Resolved">Resolved</option>
           </select>
-        </div>
+
+          <button
+            type="button"
+            onClick={refreshAlerts}
+            className="w-full rounded-md bg-[var(--surface-1)] px-4 py-2 text-sm font-semibold text-[var(--text-primary)] border border-[var(--surface-border)] hover:bg-[var(--surface-2)] transition-colors"
+          >
+            Refresh
+          </button>
+        </form>
       </div>
 
       {error && (
