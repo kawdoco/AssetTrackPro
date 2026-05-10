@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, X, Box, User, Zap } from 'lucide-react';
+import { Plus, X, Box, User, Zap } from '@/icons/lucideMuiAdapter';
 
 interface ModalProps {
   isOpen: boolean;
@@ -87,3 +87,4 @@ export const ActionModal = ({ isOpen, onClose, title, type }: ModalProps) => {
     </AnimatePresence>
   );
 };
+

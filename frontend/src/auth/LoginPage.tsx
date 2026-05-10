@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Mail, Lock, Eye, EyeOff, Shield, ChevronRight,
   ArrowLeft, ShieldCheck, Building2, UserCog,
-} from 'lucide-react';
+} from '@/icons/lucideMuiAdapter';
 import logo from '../assets/logo.png';
 import rfidBg from '../assets/Supply.jpg';
 import ForgotPasswordPage from './Forgotpasswordpage';
@@ -57,7 +57,7 @@ const stats = [
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface LoginPageProps {
-  onLogin: () => void;
+  onLogin: (email: string, password: string) => Promise<boolean>;
 }
 
 // ─── Left Panel — extracted so it never unmounts ──────────────────────────────
@@ -90,8 +90,8 @@ function LeftPanel({ accent }: { accent: string }) {
           className="flex items-center gap-3 px-5 py-3 rounded-xl mb-8"
           style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.25)' }}
         >
-          <img src={logo} alt="TrackPro" className="w-7 h-7 object-contain" />
-          <span className="text-xl font-bold tracking-tight">TrackPro</span>
+          <img src={logo} alt="AssetTrackPro" className="w-7 h-7 object-contain" />
+          <span className="text-xl font-bold tracking-tight">AssetTrackPro</span>
         </div>
 
         <h1 className="text-4xl font-bold leading-tight tracking-tight mb-4">
@@ -149,6 +149,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe]     = useState(false);
   const [isLoading, setIsLoading]       = useState(false);
+  const [loginError, setLoginError]     = useState<string | null>(null);
 
   const selectedRole = role ? ROLES[role] : null;
   const accent       = selectedRole?.accent ?? '#2563EB';
@@ -163,10 +164,18 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
   const inputBg     = '#F8FAFC';
   const inputBorder = '#E2E8F0';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => { setIsLoading(false); onLogin(); }, 1200);
+    setLoginError(null);
+
+    const success = await onLogin(email, password);
+
+    if (!success) {
+      setLoginError('Invalid email or password. Please try again.');
+    }
+
+    setIsLoading(false);
   };
 
   // ── Forgot password renders as right panel swap, left panel stays ─────────
@@ -216,7 +225,7 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                       Select your role
                     </h2>
                     <p className="text-sm" style={{ color: textSec }}>
-                      Choose how you're accessing TrackPro
+                      Choose how you're accessing AssetTrackPro
                     </p>
                   </div>
 
@@ -311,7 +320,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                           type="email"
                           placeholder="you@company.com"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (loginError) setLoginError(null);
+                          }}
                           className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400"
                           style={{ color: textPrim }}
                           required
@@ -333,7 +345,10 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                           type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (loginError) setLoginError(null);
+                          }}
                           className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400"
                           style={{ color: textPrim }}
                           required
@@ -371,6 +386,12 @@ export default function LoginPage({ onLogin }: LoginPageProps) {
                         Forgot password?
                       </button>
                     </div>
+
+                    {loginError && (
+                      <div className="text-sm font-medium" style={{ color: '#DC2626' }}>
+                        {loginError}
+                      </div>
+                    )}
 
                     {/* Submit */}
                     <button
@@ -421,7 +442,7 @@ function Footer({ textSec }: { textSec: string }) {
       className="flex items-center justify-center gap-2 mt-6 pt-5 border-t text-[12px]"
       style={{ color: textSec, borderColor: '#E2E8F0' }}
     >
-      <span>© 2026 TrackPro · Fleet Intelligence</span>
+      <span>© 2026 AssetTrackPro · Fleet Intelligence</span>
       <span>·</span>
       <a href="#" className="font-medium hover:underline" style={{ color: textSec }}>Privacy</a>
       <span>·</span>
@@ -429,3 +450,4 @@ function Footer({ textSec }: { textSec: string }) {
     </div>
   );
 }
+

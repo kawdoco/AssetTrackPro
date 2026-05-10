@@ -1,0 +1,65 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Stage all changes",
+			"type": "shell",
+			"command": "git add ."
+		},
+		{
+			"label": "Commit organization CRUD implementation",
+			"type": "shell",
+			"command": "git commit -m \"feat: Implement complete Organization CRUD with soft delete and reactivation\n\n- Add is_active field to Organization model with database migration\n- Implement backend API endpoints for organization management:\n  - POST /api/organizations - Create organization\n  - GET /api/organizations - List organizations with pagination, search, and inactive filtering\n  - GET /api/organizations/:id - Get organization by ID\n  - PUT /api/organizations/:id - Update organization\n  - DELETE /api/organizations/:id - Deactivate organization (soft delete)\n  - PATCH /api/organizations/:id/reactivate - Reactivate organization\n- Add frontend components for organization management:\n  - OrganizationManagement.tsx - Main table component with search, status display, and actions\n  - organization-form.tsx - Modal form for create/edit operations\n- Add organizationService.ts for API calls\n- Update lucideMuiAdapter.tsx with required icons (Edit, Trash2)\n- Implement role-based access control (ADMIN/MANAGER)\n- Add proper error handling and validation\n- Support viewing inactive organizations and toggling status\""
+		},
+		{
+			"label": "Commit organization CRUD implementation",
+			"type": "shell",
+			"command": "git commit -m \"feat: Implement complete Organization CRUD with soft delete and reactivation\""
+		},
+		{
+			"label": "Commit organization CRUD implementation",
+			"type": "shell",
+			"command": "git commit -m \"feat: Implement complete Organization CRUD with soft delete and reactivation\""
+		},
+		{
+			"label": "Simple commit",
+			"type": "shell",
+			"command": "git commit -m 'feat: Implement Organization CRUD with soft delete'"
+		},
+		{
+			"label": "Check current branch",
+			"type": "shell",
+			"command": "git branch --show-current"
+		},
+		{
+			"label": "Pull latest changes from main",
+			"type": "shell",
+			"command": "git pull origin main"
+		},
+		{
+			"label": "Check merge conflict status",
+			"type": "shell",
+			"command": "git status"
+		},
+		{
+			"label": "Accept main branch version for App.tsx",
+			"type": "shell",
+			"command": "git checkout --theirs frontend/src/app/App.tsx"
+		},
+		{
+			"label": "Accept main branch version for package.json",
+			"type": "shell",
+			"command": "git checkout --theirs frontend/package.json"
+		},
+		{
+			"label": "Accept main branch version for package-lock.json",
+			"type": "shell",
+			"command": "git checkout --theirs frontend/package-lock.json"
+		},
+		{
+			"label": "Stage resolved conflicts",
+			"type": "shell",
+			"command": "git add ."
+		}
+	]
+}
