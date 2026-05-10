@@ -11,6 +11,7 @@ import rfidWebhookRoutes from './routes/rfidWebhookRoutes.js';
 import branchRoutes from './routes/branchRoutes.js';
 import buildingRoutes from './routes/buildingRoutes.js';
 import zoneRoutes from './routes/zoneRoutes.js';
+import alertRoutes from './routes/alertRoutes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -33,6 +34,7 @@ app.use('/api/organizations', organizationRoutes);
 app.use('/api/branches', branchRoutes);
 app.use('/api/buildings', buildingRoutes);
 app.use('/api/zones', zoneRoutes);
+app.use('/api/alerts', alertRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/rfid-webhook', rfidWebhookRoutes);
