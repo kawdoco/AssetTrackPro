@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import {
   AlertCircle,
   ArrowLeft,
@@ -22,6 +23,11 @@ import {
   type MapPoint,
 } from '@/services/branchService';
 import { loadGoogleMaps } from '@/services/googleMapsLoader';
+import type { Zone } from '@/services/zoneService';
+import { SetupWorkflowGuide } from './setup-workflow-guide';
+import type { AppDispatch } from '@/store';
+import { createGate as createGateThunk } from '@/store/slices/gateSlice';
+import { fetchZones as fetchZonesThunk } from '@/store/slices/zoneSlice';
 
 const DEFAULT_CENTER = { lat: 6.9271, lng: 79.8612 };
 const DEFAULT_ZOOM = 17;
@@ -40,7 +46,14 @@ type EditorMode =
 const buildGateId = () =>
   `gate-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const clampGateRadius = (value: number) => Math.max(20, Math.min(30, value || DEFAULT_GATE_RADIUS));
+const clampGateRadius = (value: number) => {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized) || normalized <= 0) {
+    return DEFAULT_GATE_RADIUS;
+  }
+
+  return Math.max(1, Math.min(100, normalized));
+};
 
 const getErrorMessage = (error: unknown): string => {
   if (axios.isAxiosError(error)) {
@@ -90,9 +103,15 @@ const geocodeAddress = (geocoder: any, address: string) =>
     });
   });
 
+type PlaceSuggestion = {
+  place_id: string;
+  description: string;
+};
+
 export const BranchMapEditor: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const branchId = Number.parseInt(id || '', 10);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -102,19 +121,26 @@ export const BranchMapEditor: React.FC = () => {
   const polylineRef = useRef<any>(null);
   const rectangleRef = useRef<any>(null);
   const circleRef = useRef<any>(null);
+  const searchMarkerRef = useRef<any>(null);
+  const autocompleteServiceRef = useRef<any>(null);
+  const placesServiceRef = useRef<any>(null);
   const mapClickListenerRef = useRef<any>(null);
   const overlayListenersRef = useRef<any[]>([]);
   const gateMarkersRef = useRef<any[]>([]);
   const gateCirclesRef = useRef<any[]>([]);
 
   const [branch, setBranch] = useState<Branch | null>(null);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [boundary, setBoundary] = useState<BranchBoundary | null>(null);
   const [gateMarkers, setGateMarkers] = useState<BranchGateMarker[]>([]);
+  const [gateZoneByMarkerId, setGateZoneByMarkerId] = useState<Record<string, number>>({});
   const [mapCenter, setMapCenter] = useState<MapPoint>(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState<number>(DEFAULT_ZOOM);
   const [selectedGateId, setSelectedGateId] = useState<string | null>(null);
   const [mode, setMode] = useState<EditorMode>('pan');
   const [searchQuery, setSearchQuery] = useState('');
+  const [placeSuggestions, setPlaceSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const [squareSizeMeters, setSquareSizeMeters] = useState(DEFAULT_SQUARE_SIZE);
   const [circleRadiusMeters, setCircleRadiusMeters] = useState(DEFAULT_CIRCLE_RADIUS);
   const [defaultGateRadiusMeters, setDefaultGateRadiusMeters] = useState(DEFAULT_GATE_RADIUS);
@@ -139,6 +165,48 @@ export const BranchMapEditor: React.FC = () => {
     setMapZoom(zoom);
   };
 
+  const showSearchMarker = (maps: any, point: MapPoint) => {
+    if (!mapRef.current) {
+      return;
+    }
+
+    if (searchMarkerRef.current?.setMap) {
+      searchMarkerRef.current.setMap(null);
+      searchMarkerRef.current = null;
+    }
+
+    searchMarkerRef.current = new maps.Marker({
+      position: point,
+      map: mapRef.current,
+      title: 'Search result',
+      animation: maps.Animation?.DROP,
+    });
+  };
+
+  const resolvePlaceSuggestion = async (suggestion: PlaceSuggestion) => {
+    if (!placesServiceRef.current) {
+      throw new Error('Places service is not available.');
+    }
+
+    return new Promise<MapPoint>((resolve, reject) => {
+      placesServiceRef.current.getDetails(
+        {
+          placeId: suggestion.place_id,
+          fields: ['geometry', 'name', 'formatted_address'],
+        },
+        (place: any, status: string) => {
+          if (status !== 'OK' || !place?.geometry?.location) {
+            reject(new Error('Could not load place details.'));
+            return;
+          }
+
+          const location = place.geometry.location;
+          resolve({ lat: location.lat(), lng: location.lng() });
+        }
+      );
+    });
+  };
+
   useEffect(() => {
     let active = true;
 
@@ -150,7 +218,11 @@ export const BranchMapEditor: React.FC = () => {
       }
 
       try {
-        const [maps, response] = await Promise.all([loadGoogleMaps(), getBranchMap(branchId)]);
+        const [maps, response, zoneResponse] = await Promise.all([
+          loadGoogleMaps(),
+          getBranchMap(branchId),
+          dispatch(fetchZonesThunk({ page: 1, limit: 500 })).unwrap(),
+        ]);
 
         if (!active || !containerRef.current) {
           return;
@@ -168,6 +240,11 @@ export const BranchMapEditor: React.FC = () => {
         }));
 
         setBranch(branchData);
+        setZones(
+          Array.isArray(zoneResponse.data)
+            ? zoneResponse.data.filter((zone) => zone.building?.branch?.id === branchId)
+            : []
+        );
         setBoundary(normalizeBranchBoundaryPayload(branchData.boundary_points));
         setGateMarkers(nextGates);
         setMapCenter(nextCenter);
@@ -182,6 +259,12 @@ export const BranchMapEditor: React.FC = () => {
           fullscreenControl: true,
         });
         geocoderRef.current = new maps.Geocoder();
+
+        // Places helpers for autocomplete
+        if (maps.places) {
+          autocompleteServiceRef.current = new maps.places.AutocompleteService();
+          placesServiceRef.current = new maps.places.PlacesService(mapRef.current);
+        }
 
         maps.event.addListener(mapRef.current, 'idle', () => {
           const center = mapRef.current?.getCenter?.();
@@ -214,9 +297,51 @@ export const BranchMapEditor: React.FC = () => {
         if (mapClickListenerRef.current) {
           window.google.maps.event.removeListener(mapClickListenerRef.current);
         }
+
+        if (searchMarkerRef.current?.setMap) {
+          searchMarkerRef.current.setMap(null);
+          searchMarkerRef.current = null;
+        }
       }
     };
-  }, [branchId]);
+  }, [branchId, dispatch]);
+
+  // Autocomplete suggestions as the user types.
+  useEffect(() => {
+    if (!autocompleteServiceRef.current) {
+      setPlaceSuggestions([]);
+      return;
+    }
+
+    const input = searchQuery.trim();
+    if (!input) {
+      setPlaceSuggestions([]);
+      return;
+    }
+
+    setIsSuggesting(true);
+    const handle = window.setTimeout(() => {
+      autocompleteServiceRef.current.getPlacePredictions(
+        { input },
+        (predictions: any[], status: string) => {
+          setIsSuggesting(false);
+          if (status !== 'OK' || !Array.isArray(predictions)) {
+            setPlaceSuggestions([]);
+            return;
+          }
+
+          setPlaceSuggestions(
+            predictions.slice(0, 6).map((prediction) => ({
+              place_id: prediction.place_id,
+              description: prediction.description,
+            }))
+          );
+        }
+      );
+    }, 250);
+
+    return () => window.clearTimeout(handle);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google?.maps) {
@@ -273,11 +398,15 @@ export const BranchMapEditor: React.FC = () => {
         };
 
         setGateMarkers((prev) => [...prev, nextGate]);
+        setGateZoneByMarkerId((prev) => ({
+          ...prev,
+          [nextGate.id]: zones[0]?.id || 0,
+        }));
         setSelectedGateId(nextGate.id);
         setMode('pan');
       }
     });
-  }, [circleRadiusMeters, defaultGateRadiusMeters, gateMarkers.length, mode, squareSizeMeters]);
+  }, [circleRadiusMeters, defaultGateRadiusMeters, gateMarkers.length, mode, squareSizeMeters, zones]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google?.maps) {
@@ -510,16 +639,55 @@ export const BranchMapEditor: React.FC = () => {
 
     try {
       setError('');
-      const results = await geocodeAddress(geocoderRef.current, searchQuery.trim());
-      const location = results[0]?.geometry?.location;
 
-      if (!location) {
+      const maps = window.google?.maps;
+      if (!maps) {
+        throw new Error('Google Maps is not loaded yet.');
+      }
+
+      // Prefer first autocomplete suggestion if available.
+      let point: MapPoint | null = null;
+      if (placeSuggestions.length > 0 && placesServiceRef.current) {
+        point = await resolvePlaceSuggestion(placeSuggestions[0]);
+      } else {
+        const results = await geocodeAddress(geocoderRef.current, searchQuery.trim());
+        const location = results[0]?.geometry?.location;
+
+        if (!location) {
+          throw new Error(`Could not find "${searchQuery}".`);
+        }
+
+        point = { lat: location.lat(), lng: location.lng() };
+      }
+
+      if (!point) {
         throw new Error(`Could not find "${searchQuery}".`);
       }
 
-      jumpMapTo({ lat: location.lat(), lng: location.lng() }, 18);
+      showSearchMarker(maps, point);
+      jumpMapTo(point, 18);
+      setPlaceSuggestions([]);
     } catch (searchError) {
       setError(getErrorMessage(searchError));
+    }
+  };
+
+  const handleSelectSuggestion = async (suggestion: PlaceSuggestion) => {
+    try {
+      setError('');
+      setSearchQuery(suggestion.description);
+      setPlaceSuggestions([]);
+
+      const maps = window.google?.maps;
+      if (!maps) {
+        throw new Error('Google Maps is not loaded yet.');
+      }
+
+      const point = await resolvePlaceSuggestion(suggestion);
+      showSearchMarker(maps, point);
+      jumpMapTo(point, 18);
+    } catch (selectError) {
+      setError(getErrorMessage(selectError));
     }
   };
 
@@ -636,11 +804,59 @@ export const BranchMapEditor: React.FC = () => {
 
     const nextGateMarkers = gateMarkers.filter((gate) => gate.id !== selectedGateId);
     setGateMarkers(nextGateMarkers);
+    setGateZoneByMarkerId((prev) => {
+      const next = { ...prev };
+      delete next[selectedGateId];
+      return next;
+    });
     setSelectedGateId(nextGateMarkers[0]?.id ?? null);
+  };
+
+  const handleCreateRealGate = async () => {
+    if (!selectedGate) {
+      return;
+    }
+
+    const zoneId = gateZoneByMarkerId[selectedGate.id] || zones[0]?.id || 0;
+    if (!zoneId) {
+      setError('Create or select a zone before creating a real gate.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError('');
+      setSaveMessage('');
+
+      const response = await dispatch(createGateThunk({
+        zone_id: zoneId,
+        gate_name: selectedGate.name.trim() || 'Gate',
+        direction: selectedGate.type === 'ENTRY' || selectedGate.type === 'EXIT' ? selectedGate.type : 'BOTH',
+        latitude: selectedGate.lat,
+        longitude: selectedGate.lng,
+        radius_m: clampGateRadius(selectedGate.radius_m ?? DEFAULT_GATE_RADIUS),
+        reader_model: null,
+        is_active: true,
+      })).unwrap();
+
+      setSaveMessage(response.message || 'Gate created.');
+    } catch (gateError) {
+      setError(getErrorMessage(gateError));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="space-y-6">
+      <SetupWorkflowGuide
+        activeStep="gates"
+        counts={{
+          zones: zones.length,
+          gates: gateMarkers.length,
+        }}
+      />
+
       <div className="flex items-center justify-between gap-4">
         <div>
           <button
@@ -654,7 +870,7 @@ export const BranchMapEditor: React.FC = () => {
             {branch?.name || 'Branch'} Map Editor
           </h2>
           <p className="text-sm text-[var(--text-muted)]">
-            Search a place, jump to your current location, draw branch boundaries, and define gate read areas.
+            Draw the branch boundary, place gate read areas, then create the real gate record by selecting its zone.
           </p>
         </div>
 
@@ -696,6 +912,30 @@ export const BranchMapEditor: React.FC = () => {
                   placeholder="Search for a place, branch, road, or campus..."
                   className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] py-2 pl-10 pr-3 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
                 />
+
+                {placeSuggestions.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-md border border-[var(--surface-border)] bg-[var(--surface-0)] shadow-lg">
+                    <ul className="max-h-64 overflow-auto py-1">
+                      {placeSuggestions.map((suggestion) => (
+                        <li key={suggestion.place_id}>
+                          <button
+                            type="button"
+                            onClick={() => void handleSelectSuggestion(suggestion)}
+                            className="w-full px-3 py-2 text-left text-sm text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+                          >
+                            {suggestion.description}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {isSuggesting && placeSuggestions.length === 0 && searchQuery.trim() && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-2 rounded-md border border-[var(--surface-border)] bg-[var(--surface-0)] px-3 py-2 text-xs text-[var(--text-muted)] shadow-lg">
+                    Searching...
+                  </div>
+                )}
               </div>
               <button type="submit" className={editorSecondaryButtonClass}>
                 Search
@@ -784,13 +1024,13 @@ export const BranchMapEditor: React.FC = () => {
               </span>
               <input
                 type="number"
-                min={0}
+                min={1}
                 max={100}
                 value={defaultGateRadiusMeters}
                 onChange={(event) => setDefaultGateRadiusMeters(clampGateRadius(Number(event.target.value)))}
                 className="w-full bg-transparent outline-none"
               />
-              <span className="text-xs text-[var(--text-muted)]">recommended 20-30m</span>
+              <span className="text-xs text-[var(--text-muted)]">default 5m</span>
             </label>
           </div>
 
@@ -818,8 +1058,9 @@ export const BranchMapEditor: React.FC = () => {
             <div className="mt-3 space-y-2 text-sm text-[var(--text-muted)]">
               <p>Use `My Location` to jump to the device location or `Search` to find a branch area quickly.</p>
               <p>`Place Points` lets you create an irregular boundary, while `Square` and `Circle` create quick site shapes with one click.</p>
-              <p>Each gate shows a 20-30m read radius so future RFID read coverage can be planned visually.</p>
-              <p>The current map center, zoom, branch boundary, and gate radii are all saved with the branch.</p>
+              <p>`Add Gate` places a visual marker. Select a zone and click `Create Gate Record` to make it available on the Gates & RFID Readers page.</p>
+              <p>Each gate shows its read radius (default 5m), so RFID read coverage can be planned before hardware binding.</p>
+              <p>The map center, zoom, branch boundary, and visual gate markers are saved with the branch.</p>
             </div>
           </div>
 
@@ -856,17 +1097,43 @@ export const BranchMapEditor: React.FC = () => {
 
                 <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Zone
+                  </label>
+                  <select
+                    value={gateZoneByMarkerId[selectedGate.id] || zones[0]?.id || 0}
+                    onChange={(event) =>
+                      setGateZoneByMarkerId((prev) => ({
+                        ...prev,
+                        [selectedGate.id]: Number(event.target.value),
+                      }))
+                    }
+                    className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                  >
+                    <option value={0}>Select zone</option>
+                    {zones.map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.zone_name} / {zone.building?.name || 'Building'}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    This is required for the operational gate record. Gates belong to zones, not directly to the branch.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                     Read Radius
                   </label>
                   <input
                     type="number"
-                    min={20}
-                    max={30}
+                    min={1}
+                    max={100}
                     value={selectedGate.radius_m ?? DEFAULT_GATE_RADIUS}
                     onChange={(event) => handleUpdateSelectedGate({ radius_m: Number(event.target.value) })}
                     className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
                   />
-                  <p className="mt-1 text-xs text-[var(--text-muted)]">Recommended 20-30m for future RFID read zones.</p>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">Default is 5m.</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3 text-sm text-[var(--text-muted)]">
@@ -886,6 +1153,14 @@ export const BranchMapEditor: React.FC = () => {
                 >
                   <Trash2 className="w-4 h-4" />
                   Remove Gate
+                </button>
+                <button
+                  onClick={() => void handleCreateRealGate()}
+                  disabled={saving || zones.length === 0}
+                  className="ml-2 inline-flex items-center gap-2 rounded-md bg-[var(--brand-600)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--brand-700)] disabled:opacity-60"
+                >
+                  <Save className="w-4 h-4" />
+                  Create Gate Record
                 </button>
               </div>
             ) : (

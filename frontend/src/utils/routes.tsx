@@ -174,6 +174,8 @@ export const routes = [
       {
         path: "branches/:id/map",
         element: <BranchMapEditor />,
+      },
+      {
         path: "zones",
         element: <ZoneManagement />,
       },

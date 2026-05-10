@@ -4,16 +4,20 @@ import * as Yup from "yup";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus, Search, User, Building2, X } from "@/icons/lucideMuiAdapter";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch } from "@/store";
 import {
   createEmployee,
-  deleteEmployee,
+  deactivateEmployee,
   fetchEmployeeOrganizations,
   fetchEmployees,
+  selectEmployeeOrganizations,
+  selectEmployees,
+  selectEmployeesLoading,
   updateEmployee,
   type EmployeeCreatePayload,
   type EmployeeRecord,
-  type OrganizationOption,
-} from "@/services/employeeService";
+} from "@/store/slices/employeeSlice";
 
 const statusStyles = {
   ACTIVE: "bg-emerald-50 text-emerald-600",
@@ -31,9 +35,10 @@ const employeeSchema = Yup.object({
 });
 
 export const EmployeeManagement = () => {
-  const [employeesData, setEmployeesData] = useState<EmployeeRecord[]>([]);
-  const [organizations, setOrganizations] = useState<OrganizationOption[]>([]);
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch<AppDispatch>();
+  const employeesData = useSelector(selectEmployees);
+  const organizations = useSelector(selectEmployeeOrganizations);
+  const loading = useSelector(selectEmployeesLoading);
   const [search, setSearch] = useState("");
   const [showAddEmployeePanel, setShowAddEmployeePanel] = useState(false);
   const [showSaveConfirmPopup, setShowSaveConfirmPopup] = useState(false);
@@ -69,20 +74,15 @@ export const EmployeeManagement = () => {
 
   const loadEmployees = async (searchTerm = "") => {
     try {
-      setLoading(true);
-      const rows = await fetchEmployees(searchTerm);
-      setEmployeesData(rows);
+      await dispatch(fetchEmployees(searchTerm)).unwrap();
     } catch (error) {
       toast.error("Failed to load employees");
-    } finally {
-      setLoading(false);
     }
   };
 
   const loadOrganizations = async () => {
     try {
-      const rows = await fetchEmployeeOrganizations();
-      setOrganizations(rows);
+      await dispatch(fetchEmployeeOrganizations()).unwrap();
     } catch (error) {
       toast.error("Failed to load organizations");
     }
@@ -145,7 +145,7 @@ export const EmployeeManagement = () => {
     if (!employeeToDelete) return;
 
     try {
-      await deleteEmployee(employeeToDelete.id);
+      await dispatch(deactivateEmployee(employeeToDelete.id)).unwrap();
       toast.success("Employee deactivated successfully");
       await loadEmployees(search);
 
@@ -466,10 +466,12 @@ export const EmployeeManagement = () => {
 
                 try {
                   if (editingEmployee) {
-                    await updateEmployee(editingEmployee.id, values);
+                    await dispatch(
+                      updateEmployee({ id: editingEmployee.id, data: values }),
+                    ).unwrap();
                     toast.success("Employee updated successfully");
                   } else {
-                    await createEmployee(values);
+                    await dispatch(createEmployee(values)).unwrap();
                     toast.success("Employee created successfully");
                   }
 
@@ -504,7 +506,7 @@ export const EmployeeManagement = () => {
                     <div className="relative">
                       <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                       <select
-                        title='org'
+                        title="org"
                         name="organization_id"
                         value={values.organization_id}
                         onChange={handleChange}

@@ -233,6 +233,7 @@ model Alert {
   event_id           Int?     // Can be null for non-event-triggered alerts
   alert_type         String   // UNAUTHORIZED_EXIT, OVERDUE_RETURN, LOST_ASSET, ZONE_VIOLATION, TAMPERED_TAG
   severity           String   // CRITICAL, HIGH, MEDIUM, LOW
+  status             String   @default("Open") // Open, Acknowledged, Resolved
   message            String
   resolved_at        DateTime?
   resolution_notes   String?
@@ -245,6 +246,7 @@ model Alert {
 
   @@index([asset_id])
   @@index([severity])
+  @@index([status])
   @@index([resolved_at])
   @@index([alert_type])
   @@index([created_at])
