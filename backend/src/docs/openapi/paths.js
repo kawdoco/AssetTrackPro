@@ -390,6 +390,42 @@ export const paths = {
     }
   },
   '/api/organizations': {
+    get: {
+      tags: ['Organizations'],
+      summary: 'Get organizations with pagination and filters',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
+        { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by organization name' },
+        { name: 'includeInactive', in: 'query', schema: { type: 'boolean', default: false }, description: 'Include inactive organizations' }
+      ],
+      responses: {
+        200: {
+          description: 'Organizations list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Organization' } },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      page: { type: 'integer', example: 1 },
+                      limit: { type: 'integer', example: 10 },
+                      total: { type: 'integer', example: 24 },
+                      totalPages: { type: 'integer', example: 3 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     post: {
       tags: ['Organizations'],
       summary: 'Create a new organization',
@@ -423,50 +459,6 @@ export const paths = {
           content: {
             'application/json': {
               schema: { $ref: '#/components/schemas/ErrorResponse' }
-            }
-          }
-        }
-      }
-    },
-    get: {
-      tags: ['Organizations'],
-      summary: 'Get organizations with pagination and filters',
-      security: [{ bearerAuth: [] }],
-      parameters: [
-        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
-        { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
-        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by organization name' },
-        { name: 'includeInactive', in: 'query', schema: { type: 'boolean', default: false }, description: 'Include inactive organizations' }
-      ],
-      responses: {
-        200: {
-          description: 'Organizations list',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  success: { type: 'boolean', example: true },
-                  data: {
-                    type: 'array',
-                    items: {
-                      allOf: [{ $ref: '#/components/schemas/Organization' }],
-                      properties: {
-                        _count: { $ref: '#/components/schemas/OrganizationCountSummary' }
-                      }
-                    }
-                  },
-                  pagination: {
-                    type: 'object',
-                    properties: {
-                      page: { type: 'integer', example: 1 },
-                      limit: { type: 'integer', example: 10 },
-                      total: { type: 'integer', example: 24 },
-                      totalPages: { type: 'integer', example: 3 }
-                    }
-                  }
-                }
-              }
             }
           }
         }
@@ -632,5 +624,760 @@ export const paths = {
         }
       }
     }
-  }
+  },
+  '/api/buildings': {
+    get: {
+      tags: ['Buildings'],
+      summary: 'Get buildings with pagination, search and optional branch filter',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
+        { name: 'limit', in: 'query', schema: { type: 'integer', default: 10 }, description: 'Records per page' },
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by building name' },
+        { name: 'branch_id', in: 'query', schema: { type: 'integer', nullable: true }, description: 'Filter by branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Buildings list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Buildings retrieved successfully' },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Building' } },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      currentPage: { type: 'integer', example: 1 },
+                      totalPages: { type: 'integer', example: 3 },
+                      totalItems: { type: 'integer', example: 24 },
+                      itemsPerPage: { type: 'integer', example: 10 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    post: {
+      tags: ['Buildings'],
+      summary: 'Create a new building',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/BuildingCreateRequest' }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Building created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building created successfully' },
+                  data: { $ref: '#/components/schemas/Building' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate building in branch',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/buildings/{id}': {
+    get: {
+      tags: ['Buildings'],
+      summary: 'Get building by ID',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Building details',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building retrieved successfully' },
+                  data: { $ref: '#/components/schemas/Building' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    put: {
+      tags: ['Buildings'],
+      summary: 'Update building',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/BuildingUpdateRequest' }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Building updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building updated successfully' },
+                  data: { $ref: '#/components/schemas/Building' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate building in branch',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    delete: {
+      tags: ['Buildings'],
+      summary: 'Delete building',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Building deleted successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Building deleted successfully' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/buildings/{id}/zones': {
+    get: {
+      tags: ['Buildings'],
+      summary: 'Get zones for a building',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Building ID' }
+      ],
+      responses: {
+        200: {
+          description: 'List of zones',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Zones retrieved successfully' },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/ZoneSummary' } }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Building not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/branches/{id}': {
+    get: {
+      tags: ['Branches'],
+      summary: 'Get branch by ID',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Branch details',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/BranchDetail' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    put: {
+      tags: ['Branches'],
+      summary: 'Update branch',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/BranchUpdateRequest' }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Branch updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch updated successfully' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    delete: {
+      tags: ['Branches'],
+      summary: 'Deactivate branch',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Branch deactivated',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch deactivated successfully' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/branches/{id}/reactivate': {
+    patch: {
+      tags: ['Branches'],
+      summary: 'Reactivate branch',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Branch ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Branch reactivated',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/Branch' },
+                  message: { type: 'string', example: 'Branch reactivated successfully' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Branch not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees/organizations': {
+    get: {
+      tags: ['Employees'],
+      summary: 'Get organizations available for employee creation',
+      security: [{ bearerAuth: [] }],
+      responses: {
+        200: {
+          description: 'Organization list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/EmployeeOrganizationSummary' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees': {
+    get: {
+      tags: ['Employees'],
+      summary: 'Get employees',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'organization_id', in: 'query', schema: { type: 'integer' }, description: 'Filter by organization ID' },
+        { name: 'search', in: 'query', schema: { type: 'string', default: '' }, description: 'Search by name, employee code, or email' },
+        { name: 'is_active', in: 'query', schema: { type: 'boolean' }, description: 'Filter by active state' }
+      ],
+      responses: {
+        200: {
+          description: 'Employees list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/Employee' } }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees/create': {
+    post: {
+      tags: ['Employees'],
+      summary: 'Create employee',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/EmployeeCreateRequest' }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Employee created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Employee created successfully' },
+                  data: { $ref: '#/components/schemas/Employee' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate employee code',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/employees/{id}': {
+    put: {
+      tags: ['Employees'],
+      summary: 'Update employee',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Employee ID' }
+      ],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/EmployeeUpdateRequest' }
+          }
+        }
+      },
+      responses: {
+        200: {
+          description: 'Employee updated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Employee updated successfully' },
+                  data: { $ref: '#/components/schemas/Employee' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Employee not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        },
+        409: {
+          description: 'Duplicate employee code',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    },
+    delete: {
+      tags: ['Employees'],
+      summary: 'Deactivate employee',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Employee ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Employee deactivated successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Employee deactivated successfully' },
+                  data: { $ref: '#/components/schemas/Employee' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Employee not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/rfid-webhook/movement-event': {
+    post: {
+      tags: ['Movement Events'],
+      summary: 'Ingest RFID movement event webhook',
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/MovementEventWebhookRequest' }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'RFID event processed',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  results: {
+                    type: 'array',
+                    items: {
+                      oneOf: [
+                        {
+                          type: 'object',
+                          required: ['success', 'data'],
+                          properties: {
+                            success: { type: 'boolean', enum: [true], example: true },
+                            data: { $ref: '#/components/schemas/MovementEvent' }
+                          }
+                        },
+                        {
+                          type: 'object',
+                          required: ['success', 'message'],
+                          properties: {
+                            success: { type: 'boolean', enum: [false], example: false },
+                            message: { type: 'string', example: 'Asset not found' }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/movement-events': {
+    get: {
+      tags: ['Movement Events'],
+      summary: 'List movement events',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'asset_id', in: 'query', schema: { type: 'integer' }, description: 'Filter by asset ID' },
+        { name: 'gate_id', in: 'query', schema: { type: 'integer' }, description: 'Filter by gate ID' },
+        { name: 'event_type', in: 'query', schema: { type: 'string' }, description: 'Filter by ENTER or EXIT' },
+        { name: 'trigger_source', in: 'query', schema: { type: 'string' }, description: 'Filter by RFID, SIMULATED, or MANUAL' },
+        { name: 'from_date', in: 'query', schema: { type: 'string', format: 'date-time' }, description: 'Start date/time' },
+        { name: 'to_date', in: 'query', schema: { type: 'string', format: 'date-time' }, description: 'End date/time' },
+        { name: 'page', in: 'query', schema: { type: 'integer', default: 1 }, description: 'Page number' },
+        { name: 'limit', in: 'query', schema: { type: 'integer', default: 25 }, description: 'Records per page' }
+      ],
+      responses: {
+        200: {
+          description: 'Movement events list',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { type: 'array', items: { $ref: '#/components/schemas/MovementEvent' } },
+                  pagination: {
+                    type: 'object',
+                    properties: {
+                      page: { type: 'integer', example: 1 },
+                      limit: { type: 'integer', example: 25 },
+                      total: { type: 'integer', example: 42 },
+                      totalPages: { type: 'integer', example: 2 }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/movement-events/{id}': {
+    get: {
+      tags: ['Movement Events'],
+      summary: 'Get movement event by ID',
+      security: [{ bearerAuth: [] }],
+      parameters: [
+        { name: 'id', in: 'path', required: true, schema: { type: 'integer' }, description: 'Movement event ID' }
+      ],
+      responses: {
+        200: {
+          description: 'Movement event detail',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  data: { $ref: '#/components/schemas/MovementEvent' }
+                }
+              }
+            }
+          }
+        },
+        404: {
+          description: 'Movement event not found',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
+  '/api/movement-events/simulate': {
+    post: {
+      tags: ['Movement Events'],
+      summary: 'Create a test movement event for development',
+      security: [{ bearerAuth: [] }],
+      requestBody: {
+        required: true,
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['asset_tag_uid', 'gate_id'],
+              properties: {
+                asset_tag_uid: { type: 'string', example: 'RFID-E200-34161B5A8C7D' },
+                gate_id: { type: 'integer', example: 5 },
+                event_type: { type: 'string', example: 'ENTER', description: 'ENTER or EXIT' },
+                signal_strength: { type: 'integer', example: -65 }
+              }
+            }
+          }
+        }
+      },
+      responses: {
+        201: {
+          description: 'Simulated event created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  success: { type: 'boolean', example: true },
+                  message: { type: 'string', example: 'Simulated movement event created' },
+                  data: { $ref: '#/components/schemas/MovementEvent' }
+                }
+              }
+            }
+          }
+        },
+        400: {
+          description: 'Invalid payload',
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/ErrorResponse' }
+            }
+          }
+        }
+      }
+    }
+  },
 };
