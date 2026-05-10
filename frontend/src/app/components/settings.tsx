@@ -6,11 +6,12 @@ import {
   Building2,
   Save,
   Laptop,
-  Activity,
-  Globe,
+  Moon,
   GripVerticalIcon,
   Maximize,
+  Sun,
 } from "@/icons/lucideMuiAdapter";
+
 import type { DensityMode, ThemeMode } from "../../hooks/useUiTheme";
 
 interface SettingsProps {
@@ -58,7 +59,10 @@ export default function Settings({
     <section className="max-w-[1320px] mx-auto space-y-4">
       <header className="flex items-center justify-between bg-[var(--surface-0)] border border-[var(--surface-border)] rounded-lg px-4 py-3">
         <div>
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Settings</h2>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">
+            Settings
+          </h2>
+
           <p className="text-xs text-[var(--text-muted)] mt-1">
             Configure user preferences, security, and interface behavior.
           </p>
@@ -78,26 +82,39 @@ export default function Settings({
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <User className="w-4 h-4 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">User Profile</h3>
+
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                User Profile
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <label className="space-y-1">
-                <span className="text-xs font-medium text-[var(--text-muted)]">Full name</span>
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  Full name
+                </span>
+
                 <input
                   type="text"
                   value={profile.name}
-                  onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                  onChange={(e) =>
+                    setProfile({ ...profile, name: e.target.value })
+                  }
                   className="w-full border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
                 />
               </label>
 
               <label className="space-y-1">
-                <span className="text-xs font-medium text-[var(--text-muted)]">Email</span>
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  Email
+                </span>
+
                 <input
                   type="email"
                   value={profile.email}
-                  onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                  onChange={(e) =>
+                    setProfile({ ...profile, email: e.target.value })
+                  }
                   className="w-full border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
                 />
               </label>
@@ -107,36 +124,63 @@ export default function Settings({
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Lock className="w-4 h-4 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Security</h3>
+
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Security
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <label className="space-y-1">
-                <span className="text-xs font-medium text-[var(--text-muted)]">Current password</span>
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  Current password
+                </span>
+
                 <input
                   type="password"
                   value={password.current}
-                  onChange={(e) => setPassword({ ...password, current: e.target.value })}
+                  onChange={(e) =>
+                    setPassword({
+                      ...password,
+                      current: e.target.value,
+                    })
+                  }
                   className="w-full border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
                 />
               </label>
 
               <label className="space-y-1">
-                <span className="text-xs font-medium text-[var(--text-muted)]">New password</span>
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  New password
+                </span>
+
                 <input
                   type="password"
                   value={password.next}
-                  onChange={(e) => setPassword({ ...password, next: e.target.value })}
+                  onChange={(e) =>
+                    setPassword({
+                      ...password,
+                      next: e.target.value,
+                    })
+                  }
                   className="w-full border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
                 />
               </label>
 
               <label className="space-y-1">
-                <span className="text-xs font-medium text-[var(--text-muted)]">Confirm password</span>
+                <span className="text-xs font-medium text-[var(--text-muted)]">
+                  Confirm password
+                </span>
+
                 <input
                   type="password"
                   value={password.confirm}
-                  onChange={(e) => setPassword({ ...password, confirm: e.target.value })}
+                  onChange={(e) =>
+                    setPassword({
+                      ...password,
+                      confirm: e.target.value,
+                    })
+                  }
                   className="w-full border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-sm text-[var(--text-primary)]"
                 />
               </label>
@@ -146,7 +190,10 @@ export default function Settings({
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Bell className="w-4 h-4 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Notifications</h3>
+
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Notifications
+              </h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -154,21 +201,32 @@ export default function Settings({
                 label="Email alerts"
                 checked={notifications.emailAlerts}
                 onChange={(value) =>
-                  setNotifications((prev) => ({ ...prev, emailAlerts: value }))
+                  setNotifications((prev) => ({
+                    ...prev,
+                    emailAlerts: value,
+                  }))
                 }
               />
+
               <ToggleRow
                 label="SMS alerts"
                 checked={notifications.smsAlerts}
                 onChange={(value) =>
-                  setNotifications((prev) => ({ ...prev, smsAlerts: value }))
+                  setNotifications((prev) => ({
+                    ...prev,
+                    smsAlerts: value,
+                  }))
                 }
               />
+
               <ToggleRow
                 label="Critical only"
                 checked={notifications.criticalOnly}
                 onChange={(value) =>
-                  setNotifications((prev) => ({ ...prev, criticalOnly: value }))
+                  setNotifications((prev) => ({
+                    ...prev,
+                    criticalOnly: value,
+                  }))
                 }
               />
             </div>
@@ -178,8 +236,11 @@ export default function Settings({
         <div className="space-y-4">
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
-              <Globe className="w-4 h-4 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Theme Mode</h3>
+              <Sun className="w-4 h-4 text-[var(--text-muted)]" />
+
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Theme Mode
+              </h3>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
@@ -189,29 +250,37 @@ export default function Settings({
                 label="Auto"
                 icon={<Laptop className="w-4 h-4" />}
               />
+
               <SegmentButton
                 active={themeMode === "light"}
                 onClick={() => setThemeMode("light")}
                 label="Light"
-                icon={<Globe className="w-4 h-4" />}
+                icon={<Sun className="w-4 h-4" />}
               />
+
               <SegmentButton
                 active={themeMode === "dark"}
                 onClick={() => setThemeMode("dark")}
                 label="Dark"
-                icon={<Activity className="w-4 h-4" />}
+                icon={<Moon className="w-4 h-4" />}
               />
             </div>
 
             <p className="text-xs text-[var(--text-muted)]">
-              Active theme: <span className="font-medium text-[var(--text-secondary)]">{resolvedTheme}</span>
+              Active theme:{" "}
+              <span className="font-medium text-[var(--text-secondary)]">
+                {resolvedTheme}
+              </span>
             </p>
           </div>
 
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <GripVerticalIcon className="w-4 h-4 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Density</h3>
+
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Density
+              </h3>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -221,6 +290,7 @@ export default function Settings({
                 label="Compact"
                 icon={<GripVerticalIcon className="w-4 h-4" />}
               />
+
               <SegmentButton
                 active={densityMode === "comfortable"}
                 onClick={() => setDensityMode("comfortable")}
@@ -233,11 +303,17 @@ export default function Settings({
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Building2 className="w-4 h-4 text-[var(--text-muted)]" />
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Organization</h3>
+
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+                Organization
+              </h3>
             </div>
 
             <label className="space-y-1 block">
-              <span className="text-xs font-medium text-[var(--text-muted)]">Timezone</span>
+              <span className="text-xs font-medium text-[var(--text-muted)]">
+                Timezone
+              </span>
+
               <select
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
@@ -263,7 +339,12 @@ interface SegmentButtonProps {
   icon: ReactNode;
 }
 
-function SegmentButton({ active, onClick, label, icon }: SegmentButtonProps) {
+function SegmentButton({
+  active,
+  onClick,
+  label,
+  icon,
+}: SegmentButtonProps) {
   return (
     <button
       onClick={onClick}
@@ -285,10 +366,15 @@ interface ToggleRowProps {
   onChange: (checked: boolean) => void;
 }
 
-function ToggleRow({ label, checked, onChange }: ToggleRowProps) {
+function ToggleRow({
+  label,
+  checked,
+  onChange,
+}: ToggleRowProps) {
   return (
     <label className="flex items-center justify-between gap-3 border border-[var(--surface-border)] bg-[var(--surface-1)] rounded-md px-3 py-2 text-xs font-medium text-[var(--text-secondary)]">
       {label}
+
       <input
         type="checkbox"
         checked={checked}
