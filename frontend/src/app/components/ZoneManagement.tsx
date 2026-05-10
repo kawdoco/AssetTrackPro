@@ -2,54 +2,30 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'motion/react';
 import { Globe, Plus, Edit, Trash2, AlertCircle, RefreshCw, ChevronDown, ChevronUp } from '@/icons/lucideMuiAdapter';
-import * as zoneAPI from '@/services/zoneService';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch } from '@/store';
 import { buildingService } from '../../services/buildingService';
-import { Building } from '../../services/buildingService';
+import type { Building } from '../../services/buildingService';
 import { ZoneForm } from './zone-form';
-
-interface Zone {
-  id: number;
-  building_id: number;
-  zone_name: string;
-  zone_type: string;
-  description: string | null;
-  created_at: string;
-  updated_at: string;
-  building?: {
-    id: number;
-    name: string;
-    branch?: {
-      id: number;
-      name: string;
-      organization?: {
-        id: number;
-        name: string;
-      };
-    };
-  };
-  _count?: {
-    gates: number;
-  };
-}
-
-interface Building {
-  id: number;
-  name: string;
-  branch?: {
-    id: number;
-    name: string;
-    organization?: {
-      id: number;
-      name: string;
-    };
-  };
-}
+import { SetupWorkflowGuide } from './setup-workflow-guide';
+import {
+  createZone,
+  deleteZone,
+  fetchZones,
+  selectZones,
+  selectZonesError,
+  selectZonesLoading,
+  updateZone,
+} from '@/store/slices/zoneSlice';
+import type { Zone } from '@/services/zoneService';
 
 export const ZoneManagement = () => {
-  const [zones, setZones] = useState<Zone[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const zones = useSelector(selectZones);
+  const loading = useSelector(selectZonesLoading);
+  const storeError = useSelector(selectZonesError);
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [expandedZone, setExpandedZone] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -73,7 +49,7 @@ export const ZoneManagement = () => {
   // Fetch buildings for dropdown
   const fetchBuildings = async () => {
     try {
-      const response = await buildingService.getBuildings(1, 100, '', undefined, true);
+      const response = await buildingService.getBuildings(1, 100, '');
       if (response.success && Array.isArray(response.data)) {
         setBuildings(response.data as Building[]);
       }
@@ -82,47 +58,19 @@ export const ZoneManagement = () => {
     }
   };
 
-  // Fetch zones
-  const fetchZones = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await zoneAPI.getZones(page, 10, searchTerm, undefined, zoneTypeFilter || undefined);
-      if (response.success && Array.isArray(response.data)) {
-        setZones(response.data);
-      }
-    } catch (err) {
-      const message = getErrorMessage(err);
-      setError(message);
-      console.error('Error fetching zones:', message, err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     fetchBuildings();
   }, []);
 
   useEffect(() => {
-    fetchZones();
-  }, [page, zoneTypeFilter]);
+    void dispatch(fetchZones({ page, limit: 10, search: searchTerm, zone_type: zoneTypeFilter || undefined }));
+  }, [dispatch, page, zoneTypeFilter]);
 
   // Handle search
   const handleSearch = async (term: string) => {
     setSearchTerm(term);
     setPage(1);
-    try {
-      setLoading(true);
-      const response = await zoneAPI.getZones(1, 10, term, undefined, zoneTypeFilter || undefined);
-      if (response.success && Array.isArray(response.data)) {
-        setZones(response.data);
-      }
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
+    await dispatch(fetchZones({ page: 1, limit: 10, search: term, zone_type: zoneTypeFilter || undefined }));
   };
 
   // Handle create/edit
@@ -136,23 +84,18 @@ export const ZoneManagement = () => {
       setFormLoading(true);
 
       if (editingZone) {
-        // Update
-        const response = await zoneAPI.updateZone(editingZone.id, {
-          zone_name: data.zone_name,
-          zone_type: data.zone_type,
-          description: data.description,
-        });
-        if (response.success) {
-          setZones(zones =>
-            zones.map(zone => zone.id === editingZone.id ? (response.data as Zone) : zone)
-          );
-        }
+        await dispatch(
+          updateZone({
+            id: editingZone.id,
+            data: {
+              zone_name: data.zone_name,
+              zone_type: data.zone_type,
+              description: data.description,
+            },
+          }),
+        ).unwrap();
       } else {
-        // Create
-        const response = await zoneAPI.createZone(data);
-        if (response.success) {
-          setZones(zones => [(response.data as Zone), ...zones]);
-        }
+        await dispatch(createZone(data)).unwrap();
       }
 
       setShowForm(false);
@@ -168,9 +111,7 @@ export const ZoneManagement = () => {
   const handleDelete = async (id: number) => {
     try {
       setFormLoading(true);
-      await zoneAPI.deleteZone(id);
-      // Remove the zone from the list
-      setZones(zones => zones.filter(zone => zone.id !== id));
+      await dispatch(deleteZone(id)).unwrap();
       setDeleteConfirm(null);
     } catch (err) {
       setError(getErrorMessage(err));
@@ -197,11 +138,25 @@ export const ZoneManagement = () => {
   return (
     <div className="flex h-full gap-4 relative">
       <div className="flex-1 flex flex-col gap-4">
+        <SetupWorkflowGuide
+          activeStep="zones"
+          counts={{
+            buildings: buildings.length,
+            zones: zones.length,
+          }}
+        />
+
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Zones</h2>
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Zones</h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              Define rooms or areas inside buildings. Gates attach to zones, so create zones before gates.
+            </p>
+          </div>
           <button
             onClick={() => handleOpenForm()}
+            title="Create a trackable area inside a building."
             className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-sm font-semibold hover:bg-[var(--brand-700)] transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -220,6 +175,7 @@ export const ZoneManagement = () => {
           />
           <select
             value={zoneTypeFilter}
+            title="Filter by the operational role of the zone."
             onChange={(e) => {
               setZoneTypeFilter(e.target.value);
               setPage(1);
@@ -235,10 +191,10 @@ export const ZoneManagement = () => {
         </div>
 
         {/* Error Message */}
-        {error && (
+        {(error || storeError) && (
           <div className="flex gap-2 p-3 bg-red-100/10 border border-red-500/20 rounded-md">
             <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-red-600">{error}</p>
+            <p className="text-sm text-red-600">{error || storeError}</p>
           </div>
         )}
 

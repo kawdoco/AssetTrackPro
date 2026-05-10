@@ -164,6 +164,9 @@ export const ZoneForm: React.FC<ZoneFormProps> = ({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Zones live inside buildings. If this list is empty, create a branch and building first.
+            </p>
             {errors.building_id && (
               <p className="mt-1 text-sm text-red-600">{errors.building_id}</p>
             )}
@@ -187,6 +190,9 @@ export const ZoneForm: React.FC<ZoneFormProps> = ({
               } bg-[var(--surface-1)] text-[var(--text-primary)] placeholder-[var(--text-muted)]`}
               disabled={isLoading}
             />
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Example: Loading Dock, Server Room, Storage Room, Main Exit.
+            </p>
             {errors.zone_name && (
               <p className="mt-1 text-sm text-red-600">{errors.zone_name}</p>
             )}
@@ -215,6 +221,9 @@ export const ZoneForm: React.FC<ZoneFormProps> = ({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Type helps reports and alerts explain what kind of area the asset moved through.
+            </p>
             {errors.zone_type && (
               <p className="mt-1 text-sm text-red-600">{errors.zone_type}</p>
             )}
