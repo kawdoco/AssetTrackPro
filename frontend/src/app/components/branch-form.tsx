@@ -180,6 +180,9 @@ export const BranchForm: React.FC<BranchFormProps> = ({
                 </option>
               ))}
             </select>
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Branches must belong to an organization. If this list is empty, create an organization first.
+            </p>
             {errors.organization_id && <p className="text-sm text-red-500 mt-1">{errors.organization_id}</p>}
           </div>
 
@@ -201,6 +204,9 @@ export const BranchForm: React.FC<BranchFormProps> = ({
                   : 'border-[var(--surface-border)] focus:ring-[var(--brand-600)]'
               } focus:outline-none focus:ring-1 disabled:opacity-50`}
             />
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              This should be the physical site name users recognize in daily operations.
+            </p>
             {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name}</p>}
           </div>
 
@@ -228,6 +234,9 @@ export const BranchForm: React.FC<BranchFormProps> = ({
                   : 'border-[var(--surface-border)] focus:ring-[var(--brand-600)]'
               } focus:outline-none focus:ring-1 disabled:opacity-50`}
             />
+            <p className="mt-1 text-xs text-[var(--text-muted)]">
+              Used for filtering and map context. The exact branch boundary is drawn later in Map Editor.
+            </p>
             {errors.city && <p className="text-sm text-red-500 mt-1">{errors.city}</p>}
           </div>
 

@@ -19,6 +19,7 @@ import {
 import * as organizationAPI from '@/services/organizationService';
 import type { Branch } from '../../services/branchService';
 import { BranchForm } from './branch-form';
+import { SetupWorkflowGuide } from './setup-workflow-guide';
 
 interface Organization {
   id: number;
@@ -37,11 +38,11 @@ export const BranchManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [includeInactive, setIncludeInactive] = useState(false);
-  
+
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | undefined>();
-  
+
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
@@ -100,7 +101,7 @@ export const BranchManagement = () => {
       } else {
         await dispatch(createBranch(data)).unwrap();
       }
-      
+
       setShowForm(false);
       setEditingBranch(undefined);
     } catch (err) {
@@ -130,11 +131,25 @@ export const BranchManagement = () => {
   return (
     <div className="flex h-full gap-4 relative">
       <div className="flex-1 flex flex-col gap-4">
+        <SetupWorkflowGuide
+          activeStep="branches"
+          counts={{
+            organizations: organizations.length,
+            branches: branches.length,
+          }}
+        />
+
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Branches</h2>
+          <div>
+            <h2 className="text-base font-semibold text-[var(--text-primary)]">Branches</h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              Create each physical site under an organization before adding buildings or drawing the branch map.
+            </p>
+          </div>
           <button
             onClick={() => handleOpenForm()}
+            title="Add a physical site or campus under an existing organization."
             className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-sm font-semibold hover:bg-[var(--brand-700)] transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -159,11 +174,10 @@ export const BranchManagement = () => {
               setPage(1);
               setIncludeInactive((current) => !current);
             }}
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
-              includeInactive
-                ? 'bg-[var(--brand-600)] text-white'
-                : 'bg-[var(--surface-1)] border border-[var(--surface-border)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
-            }`}
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${includeInactive
+              ? 'bg-[var(--brand-600)] text-white'
+              : 'bg-[var(--surface-1)] border border-[var(--surface-border)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
+              }`}
           >
             {includeInactive ? 'Hide Inactive' : 'Show Inactive'}
           </button>
@@ -232,11 +246,10 @@ export const BranchManagement = () => {
                     </td>
 
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                        branch.status === 'ACTIVE'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-gray-100 text-gray-600'
-                      }`}>
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${branch.status === 'ACTIVE'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-gray-100 text-gray-600'
+                        }`}>
                         {branch.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -251,7 +264,7 @@ export const BranchManagement = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => navigate(`/branches/${branch.id}/map`)}
-                          title="Edit Map"
+                          title="Open the Map Editor to draw branch boundaries and place gate markers."
                           className="rounded-md border border-[var(--surface-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all"
                         >
                           Map
@@ -263,7 +276,7 @@ export const BranchManagement = () => {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        
+
                         {branch.status === 'ACTIVE' ? (
                           <button
                             onClick={() => setDeleteConfirm(branch.id)}
@@ -300,6 +313,28 @@ export const BranchManagement = () => {
             </tbody>
           </table>
         </div>
+
+        <div className="flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
+          <span>
+            Page {pagination.page} of {pagination.totalPages} · {pagination.total} branch(es)
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1 || loading}
+              className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((current) => Math.min(pagination.totalPages || current + 1, current + 1))}
+              disabled={loading || page >= (pagination.totalPages || 1)}
+              className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Branch Form Modal */}
@@ -315,28 +350,6 @@ export const BranchManagement = () => {
         }}
         title={editingBranch ? 'Edit Branch' : 'Create Branch'}
       />
-
-      <div className="flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
-        <span>
-          Page {pagination.page} of {pagination.totalPages} · {pagination.total} branch(es)
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={page <= 1 || loading}
-            className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((current) => Math.min(pagination.totalPages || current + 1, current + 1))}
-            disabled={loading || page >= (pagination.totalPages || 1)}
-            className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
