@@ -57,11 +57,11 @@ const normalizeZoom = (value, fallback = 17) => {
 const clampGateRadius = (value) => {
   const parsed = Number(value);
 
-  if (!Number.isFinite(parsed)) {
-    return 25;
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return 5;
   }
 
-  return Math.max(20, Math.min(30, parsed));
+  return Math.max(1, Math.min(100, parsed));
 };
 
 const normalizePolygonPoints = (points) => {

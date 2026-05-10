@@ -46,7 +46,7 @@ export const loadGoogleMaps = async (): Promise<any> => {
     script.id = GOOGLE_MAPS_SCRIPT_ID;
     script.async = true;
     script.defer = true;
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=geometry&loading=async&callback=__assetTrackGoogleMapsInit`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&libraries=geometry,places&loading=async&callback=__assetTrackGoogleMapsInit`;
     script.onerror = () => reject(new Error('Failed to load Google Maps script.'));
     document.head.appendChild(script);
   });
