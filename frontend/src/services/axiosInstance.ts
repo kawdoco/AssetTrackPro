@@ -3,7 +3,7 @@ import type { AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'a
 import { navigateTo } from './navigation';
 
 const axiosInstance: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5188/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   timeout: 60000,
   headers: {
     'Content-Type': 'application/json',

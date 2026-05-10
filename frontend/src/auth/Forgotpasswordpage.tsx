@@ -147,7 +147,7 @@ export default function ForgotPasswordPage({ accent, onBack }: ForgotPasswordPag
           className="flex items-center justify-center gap-2 mt-6 pt-5 border-t text-[12px]"
           style={{ color: textSec, borderColor: '#E2E8F0' }}
         >
-          <span>© 2026 TrackPro · Fleet Intelligence</span>
+          <span>© 2026 AssetTrackPro · Fleet Intelligence</span>
           <span>·</span>
           <a href="#" className="font-medium hover:underline" style={{ color: textSec }}>Privacy</a>
           <span>·</span>

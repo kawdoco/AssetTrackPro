@@ -1,19 +1,20 @@
-/// <reference types="vite/client" />
 import React from "react";
 import {
   LayoutDashboard,
   Package,
   Users,
   Building2,
+  MapPin,
   Bell,
   FileText,
   Settings,
   ChevronRight,
   PanelLeftIcon,
+  Globe,
 } from "@/icons/lucideMuiAdapter";
 
-import type { TabId } from "../../utils/routes";
 import logo from "../../assets/logo.png";
+import type { TabId } from "../../utils/routes";
 
 interface SidebarProps {
   activeTab: TabId;
@@ -32,6 +33,8 @@ const navItems: Array<{
   { id: "assets", label: "Assets", icon: Package },
   { id: "employees", label: "Employees", icon: Users },
   { id: "organizations", label: "Organizations", icon: Building2 },
+  { id: "branches", label: "Branches", icon: MapPin },
+  { id: "zones", label: "Zones", icon: Globe },
   { id: "alerts", label: "Alerts", icon: Bell },
   { id: "reports", label: "Reports", icon: FileText },
   { id: "settings", label: "Settings", icon: Settings },
@@ -56,7 +59,7 @@ export const Sidebar = ({
           <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3"}`}>
             <img
               src={logo}
-              alt="TrackPro"
+              alt="AssetTrackPro"
               className="w-8 h-8 rounded-md object-contain"
             />
             {!isCollapsed && (

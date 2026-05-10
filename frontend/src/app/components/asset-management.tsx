@@ -1,29 +1,174 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Search, Filter, Download, MoreHorizontal, 
-  ChevronRight, Box, Clock, MapPin, History,
-  ArrowUpRight, ArrowDownRight, User, AlertTriangle,
+  Search, Filter, Download, MoreHorizontal,
+  Box, MapPin, History,
+  ArrowUpRight, ArrowDownRight, AlertTriangle,
+  Plus,
   X
 } from '@/icons/lucideMuiAdapter';
 
-const assetsData = [
-  { id: 'RF-8829', name: 'Industrial Drill P-20', category: 'Heavy Machinery', location: 'Warehouse A', status: 'normal', lastSeen: '2 mins ago', holder: 'Mike Chen' },
-  { id: 'RF-4421', name: 'Mobile Gateway v2', category: 'IT Equipment', location: 'Section B', status: 'overdue', lastSeen: '4 hours ago', holder: 'Sarah Jenkins' },
-  { id: 'RF-9902', name: 'Storage Container B-09', category: 'Logistics', location: 'Dock 4', status: 'missing', lastSeen: 'Yesterday', holder: 'None' },
-  { id: 'RF-1283', name: 'Calibrator Tool S-5', category: 'Precision Tools', location: 'Lab 1', status: 'normal', lastSeen: '15 mins ago', holder: 'David Miller' },
-  { id: 'RF-3391', name: 'Loading Palette 44', category: 'Logistics', location: 'Warehouse A', status: 'normal', lastSeen: '1 hour ago', holder: 'Mike Chen' },
-  { id: 'RF-5562', name: 'Safety Kit 09', category: 'Emergency', location: 'Exit G', status: 'overdue', lastSeen: '12 hours ago', holder: 'Emma Wilson' },
-];
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@/store';
+import {
+  fetchAssetAssignments,
+  fetchAssets,
+  createAsset,
+  selectAllAssets,
+  selectAssetsError,
+  selectAssetsLoading,
+  selectAssetAssignments,
+  selectSelectedAsset,
+  setSelectedAsset,
+  type Asset,
+} from '@/store/slices/assetSlice';
 
-const statusStyles = {
-  normal: { bg: 'bg-blue-50', text: 'text-[#248AFF]', label: 'Normal' },
-  overdue: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'Overdue' },
-  missing: { bg: 'bg-rose-50', text: 'text-rose-600', label: 'Missing' },
+import axios from 'axios';
+
+const statusStyles: Record<string, { bg: string; text: string; label: string }> = {
+  ACTIVE: { bg: 'bg-blue-50', text: 'text-[#248AFF]', label: 'Active' },
+  LOST: { bg: 'bg-rose-50', text: 'text-rose-600', label: 'Lost' },
+  RECOVERED: { bg: 'bg-blue-50', text: 'text-[#248AFF]', label: 'Recovered' },
+  RETIRED: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'Retired' },
+  UNKNOWN: { bg: 'bg-amber-50', text: 'text-amber-600', label: 'Unknown' },
+};
+
+const formatLastSeen = (iso: string | null) => {
+  if (!iso) return '—';
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return '—';
+  return date.toLocaleString();
+};
+
+const generateAssetTagUid = () => {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID();
+    }
+  } catch {
+    // ignore
+  }
+
+  // Fallback: not a true UUID, but good enough for local uniqueness.
+  return `asset-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 };
 
 export const AssetManagement = () => {
-  const [selectedAsset, setSelectedAsset] = useState<typeof assetsData[0] | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const loading = useSelector(selectAssetsLoading);
+  const error = useSelector(selectAssetsError);
+  const assets = useSelector(selectAllAssets);
+  const selectedAsset = useSelector(selectSelectedAsset);
+
+  const [search, setSearch] = useState('');
+
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [assetTagMode, setAssetTagMode] = useState<'auto' | 'manual'>('auto');
+  const [generatedAssetTagUid, setGeneratedAssetTagUid] = useState(generateAssetTagUid());
+  const [formData, setFormData] = useState({
+    asset_tag_uid: '',
+    asset_type: '',
+    model: '',
+    serial_number: '',
+    status: 'ACTIVE',
+  });
+
+  const getErrorMessage = (value: unknown): string => {
+    if (axios.isAxiosError(value)) {
+      return value.response?.data?.message || value.message;
+    }
+
+    if (typeof value === 'string') return value;
+    return value instanceof Error ? value.message : 'An unknown error occurred';
+  };
+
+  useEffect(() => {
+    dispatch(fetchAssets({}));
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!selectedAsset) return;
+    dispatch(fetchAssetAssignments({ assetId: selectedAsset.id, active: true }));
+  }, [dispatch, selectedAsset]);
+
+  const selectedAssetAssignments = useSelector((state: RootState) =>
+    selectedAsset ? selectAssetAssignments(state, selectedAsset.id) : []
+  );
+
+  const currentHolder = useMemo(() => {
+    const active = selectedAssetAssignments.find((assignment) => assignment.returned_at === null);
+    return active?.employee?.name || null;
+  }, [selectedAssetAssignments]);
+
+  const filteredAssets = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    if (!term) return assets;
+    return assets.filter((asset: Asset) => {
+      const haystack = [
+        asset.asset_tag_uid,
+        asset.asset_type,
+        asset.model || '',
+        asset.serial_number || '',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(term);
+    });
+  }, [assets, search]);
+
+  const openCreateForm = () => {
+    setFormError('');
+    setAssetTagMode('auto');
+    setGeneratedAssetTagUid(generateAssetTagUid());
+    setFormData({
+      asset_tag_uid: '',
+      asset_type: '',
+      model: '',
+      serial_number: '',
+      status: 'ACTIVE',
+    });
+    dispatch(setSelectedAsset(null));
+    setShowCreateForm(true);
+  };
+
+  const closeCreateForm = () => {
+    setShowCreateForm(false);
+    setFormError('');
+  };
+
+  const handleCreateAsset = async () => {
+    const assetTagUid =
+      assetTagMode === 'auto' ? generatedAssetTagUid : formData.asset_tag_uid.trim();
+
+    if (!assetTagUid || !formData.asset_type.trim()) {
+      setFormError('Asset Tag UID and Asset Type are required');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setFormError('');
+
+      await dispatch(
+        createAsset({
+          asset_tag_uid: assetTagUid,
+          asset_type: formData.asset_type.trim(),
+          model: formData.model.trim() || undefined,
+          serial_number: formData.serial_number.trim() || undefined,
+          status: formData.status,
+        })
+      ).unwrap();
+
+      await dispatch(fetchAssets({}));
+      closeCreateForm();
+    } catch (createError) {
+      setFormError(getErrorMessage(createError));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="flex h-full gap-4 overflow-hidden">
@@ -41,11 +186,20 @@ export const AssetManagement = () => {
             </div>
 
             <div className="flex items-center gap-3">
+              <button
+                onClick={openCreateForm}
+                className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-xs font-semibold hover:bg-[var(--brand-700)] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                Add Asset
+              </button>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-muted)]" />
                 <input
                   type="text"
                   placeholder="Filter by ID, name..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                   className="bg-[var(--surface-1)] border border-[var(--surface-border)] rounded-md py-2 pl-9 pr-4 text-xs text-[var(--text-primary)] focus:ring-2 focus:ring-[var(--brand-200)] transition-all outline-none"
                 />
               </div>
@@ -72,15 +226,50 @@ export const AssetManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--surface-border)]">
-                {assetsData.map((asset) => (
+                {loading && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-6 text-xs font-medium text-[var(--text-muted)]"
+                    >
+                      Loading assets...
+                    </td>
+                  </tr>
+                )}
+
+                {!loading && error && (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-6 text-xs font-medium text-rose-600">
+                      {error}
+                    </td>
+                  </tr>
+                )}
+
+                {!loading && !error && filteredAssets.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-6 text-xs font-medium text-[var(--text-muted)]"
+                    >
+                      No assets found.
+                    </td>
+                  </tr>
+                )}
+
+                {!loading &&
+                  !error &&
+                  filteredAssets.map((asset) => (
                   <motion.tr
                     key={asset.id}
                     whileHover={{ backgroundColor: 'var(--surface-2)' }}
-                    onClick={() => setSelectedAsset(asset)}
+                    onClick={() => {
+                      setShowCreateForm(false);
+                      dispatch(setSelectedAsset(asset));
+                    }}
                     className={`cursor-pointer group transition-colors ${selectedAsset?.id === asset.id ? 'bg-[var(--brand-200)]/30' : ''}`}
                   >
                     <td className="px-4 py-3">
-                      <span className="text-sm font-semibold text-[var(--text-primary)]">{asset.id}</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{asset.asset_tag_uid}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
@@ -88,24 +277,32 @@ export const AssetManagement = () => {
                           <Box className="w-4 h-4 text-[var(--text-muted)]" />
                         </div>
                         <div>
-                          <p className="text-sm font-semibold text-[var(--text-primary)]">{asset.name}</p>
-                          <p className="text-[10px] font-semibold text-[var(--text-muted)]">{asset.category}</p>
+                          <p className="text-sm font-semibold text-[var(--text-primary)]">{asset.model || asset.asset_type}</p>
+                          <p className="text-[10px] font-semibold text-[var(--text-muted)]">{asset.asset_type}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <MapPin className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                        <span className="text-xs font-medium text-[var(--text-secondary)]">{asset.location}</span>
+                        <span className="text-xs font-medium text-[var(--text-secondary)]">
+                          {asset.last_seen_zone?.zone_name || '—'}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusStyles[asset.status as keyof typeof statusStyles].bg} ${statusStyles[asset.status as keyof typeof statusStyles].text}`}>
-                        {statusStyles[asset.status as keyof typeof statusStyles].label}
+                      <span
+                        className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          (statusStyles[asset.status] || statusStyles.UNKNOWN).bg
+                        } ${(statusStyles[asset.status] || statusStyles.UNKNOWN).text}`}
+                      >
+                        {(statusStyles[asset.status] || statusStyles.UNKNOWN).label}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs font-medium text-[var(--text-muted)]">{asset.lastSeen}</span>
+                      <span className="text-xs font-medium text-[var(--text-muted)]">
+                        {formatLastSeen(asset.last_seen_time)}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button title="More actions" aria-label="More actions" className="p-1.5 rounded-md hover:bg-[var(--surface-0)] text-[var(--text-muted)] transition-colors opacity-0 group-hover:opacity-100">
@@ -122,7 +319,7 @@ export const AssetManagement = () => {
 
       {/* Detail Side Panel */}
       <AnimatePresence>
-        {selectedAsset && (
+        {selectedAsset && !showCreateForm && (
           <motion.div
             initial={{ x: 100, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -131,7 +328,7 @@ export const AssetManagement = () => {
           >
             <div className="p-5 border-b border-[var(--surface-border)] relative">
               <button 
-                onClick={() => setSelectedAsset(null)}
+                onClick={() => dispatch(setSelectedAsset(null))}
                 title="Close details"
                 aria-label="Close details"
                 className="absolute top-4 right-4 p-1.5 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] transition-colors"
@@ -142,23 +339,33 @@ export const AssetManagement = () => {
               <div className="w-14 h-14 bg-[var(--brand-200)]/30 rounded-lg flex items-center justify-center mb-4 border border-[var(--surface-border)]">
                 <Box className="w-7 h-7 text-[var(--brand-600)]" />
               </div>
-              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-1">{selectedAsset.name}</h3>
-              <p className="text-xs font-semibold text-[var(--text-muted)] mb-4">{selectedAsset.id} • {selectedAsset.category}</p>
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-1">
+                {selectedAsset.model || selectedAsset.asset_type}
+              </h3>
+              <p className="text-xs font-semibold text-[var(--text-muted)] mb-4">
+                {selectedAsset.asset_tag_uid} • {selectedAsset.asset_type}
+              </p>
               
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-[var(--surface-2)] p-3 rounded-md border border-[var(--surface-border)]">
                   <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">Current Holder</p>
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 bg-[var(--brand-700)] rounded-full flex items-center justify-center text-[8px] text-white font-semibold">
-                      {selectedAsset.holder !== 'None' ? selectedAsset.holder[0] : 'N'}
+                      {currentHolder ? currentHolder[0] : '—'}
                     </div>
-                    <span className="text-xs font-semibold text-[var(--text-primary)]">{selectedAsset.holder}</span>
+                    <span className="text-xs font-semibold text-[var(--text-primary)]">
+                      {currentHolder || 'Unassigned'}
+                    </span>
                   </div>
                 </div>
                 <div className="bg-[var(--surface-2)] p-3 rounded-md border border-[var(--surface-border)]">
                   <p className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">Status</p>
-                  <span className={`text-xs font-semibold ${statusStyles[selectedAsset.status as keyof typeof statusStyles].text}`}>
-                    {statusStyles[selectedAsset.status as keyof typeof statusStyles].label}
+                  <span
+                    className={`text-xs font-semibold ${
+                      (statusStyles[selectedAsset.status] || statusStyles.UNKNOWN).text
+                    }`}
+                  >
+                    {(statusStyles[selectedAsset.status] || statusStyles.UNKNOWN).label}
                   </span>
                 </div>
               </div>
@@ -215,6 +422,161 @@ export const AssetManagement = () => {
               </button>
               <button className="py-2.5 px-4 bg-[var(--brand-600)] text-white rounded-md font-semibold text-xs hover:bg-[var(--brand-700)] transition-colors">
                 Update Status
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Create Side Panel */}
+      <AnimatePresence>
+        {showCreateForm && (
+          <motion.div
+            initial={{ x: 100, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 100, opacity: 0 }}
+            className="w-[360px] bg-[var(--surface-0)] rounded-lg border border-[var(--surface-border)] shadow-lg overflow-hidden flex flex-col"
+          >
+            <div className="p-5 border-b border-[var(--surface-border)] relative">
+              <button
+                onClick={closeCreateForm}
+                title="Close create"
+                aria-label="Close create"
+                className="absolute top-4 right-4 p-1.5 hover:bg-[var(--surface-2)] rounded-full text-[var(--text-muted)] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-1">New Asset</h3>
+              <p className="text-xs font-semibold text-[var(--text-muted)]">Create a new asset in inventory</p>
+            </div>
+
+            <div className="flex-1 p-5 overflow-y-auto">
+              {formError && (
+                <div className="mb-4 rounded-md border border-red-500/20 bg-red-100/10 p-3 text-xs text-red-600">
+                  {formError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-[var(--text-primary)]">
+                    Asset Tag UID
+                  </label>
+                  <div className="flex items-center gap-3 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setAssetTagMode('auto')}
+                      className={`rounded-md px-3 py-2 text-xs font-semibold transition-all ${
+                        assetTagMode === 'auto'
+                          ? 'bg-[var(--brand-600)] text-white'
+                          : 'border border-[var(--surface-border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
+                      }`}
+                    >
+                      Auto-generate
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setAssetTagMode('manual')}
+                      className={`rounded-md px-3 py-2 text-xs font-semibold transition-all ${
+                        assetTagMode === 'manual'
+                          ? 'bg-[var(--brand-600)] text-white'
+                          : 'border border-[var(--surface-border)] bg-[var(--surface-1)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
+                      }`}
+                    >
+                      Manual
+                    </button>
+                  </div>
+
+                  {assetTagMode === 'auto' ? (
+                    <div className="flex gap-2">
+                      <input
+                        value={generatedAssetTagUid}
+                        readOnly
+                        className="flex-1 rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setGeneratedAssetTagUid(generateAssetTagUid())}
+                        className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all"
+                      >
+                        Regenerate
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      value={formData.asset_tag_uid}
+                      onChange={(e) => setFormData((c) => ({ ...c, asset_tag_uid: e.target.value }))}
+                      placeholder="EPC Gen2 RFID or UUID"
+                      className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                    />
+                  )}
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-[var(--text-primary)]">
+                    Asset Type
+                  </label>
+                  <input
+                    value={formData.asset_type}
+                    onChange={(e) => setFormData((c) => ({ ...c, asset_type: e.target.value }))}
+                    placeholder="LAPTOP, TABLET, PHONE, ..."
+                    className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-[var(--text-primary)]">Model</label>
+                  <input
+                    value={formData.model}
+                    onChange={(e) => setFormData((c) => ({ ...c, model: e.target.value }))}
+                    placeholder="Optional"
+                    className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-[var(--text-primary)]">
+                    Serial Number
+                  </label>
+                  <input
+                    value={formData.serial_number}
+                    onChange={(e) => setFormData((c) => ({ ...c, serial_number: e.target.value }))}
+                    placeholder="Optional"
+                    className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold text-[var(--text-primary)]">Status</label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData((c) => ({ ...c, status: e.target.value }))}
+                    className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="LOST">LOST</option>
+                    <option value="RECOVERED">RECOVERED</option>
+                    <option value="RETIRED">RETIRED</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-5 border-t border-[var(--surface-border)] grid grid-cols-2 gap-3">
+              <button
+                onClick={closeCreateForm}
+                disabled={saving}
+                className="py-2.5 px-4 bg-[var(--surface-0)] border border-[var(--surface-border)] rounded-md font-semibold text-xs text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => void handleCreateAsset()}
+                disabled={saving}
+                className="py-2.5 px-4 bg-[var(--brand-600)] text-white rounded-md font-semibold text-xs hover:bg-[var(--brand-700)] transition-colors disabled:opacity-50"
+              >
+                {saving ? 'Creating...' : 'Create'}
               </button>
             </div>
           </motion.div>
