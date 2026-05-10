@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import assetReducer from './slices/assetSlice';
 import branchReducer from './slices/branchSlice';
 import organizationReducer from './slices/organizationSlice';
+import gateReducer from './slices/gateSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     assets: assetReducer,
     branches: branchReducer,
     organizations: organizationReducer,
+    gates: gateReducer,
   },
 });
 
