@@ -37,11 +37,11 @@ export const BranchManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [includeInactive, setIncludeInactive] = useState(false);
-  
+
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | undefined>();
-  
+
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
 
@@ -100,7 +100,7 @@ export const BranchManagement = () => {
       } else {
         await dispatch(createBranch(data)).unwrap();
       }
-      
+
       setShowForm(false);
       setEditingBranch(undefined);
     } catch (err) {
@@ -129,6 +129,7 @@ export const BranchManagement = () => {
 
   return (
     <div className="flex h-full gap-4 relative">
+      {/* ✅ Everything — header, search, table, AND pagination — is inside this single column div */}
       <div className="flex-1 flex flex-col gap-4">
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
@@ -263,7 +264,7 @@ export const BranchManagement = () => {
                         >
                           <Edit className="w-4 h-4" />
                         </button>
-                        
+
                         {branch.status === 'ACTIVE' ? (
                           <button
                             onClick={() => setDeleteConfirm(branch.id)}
@@ -300,6 +301,29 @@ export const BranchManagement = () => {
             </tbody>
           </table>
         </div>
+
+        {/* ✅ FIX: Pagination moved inside the flex column, so it sits below the table */}
+        <div className="flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
+          <span>
+            Page {pagination.page} of {pagination.totalPages} · {pagination.total} branch(es)
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page <= 1 || loading}
+              className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage((current) => Math.min(pagination.totalPages || current + 1, current + 1))}
+              disabled={loading || page >= (pagination.totalPages || 1)}
+              className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Branch Form Modal */}
@@ -315,28 +339,6 @@ export const BranchManagement = () => {
         }}
         title={editingBranch ? 'Edit Branch' : 'Create Branch'}
       />
-
-      <div className="flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
-        <span>
-          Page {pagination.page} of {pagination.totalPages} · {pagination.total} branch(es)
-        </span>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setPage((current) => Math.max(1, current - 1))}
-            disabled={page <= 1 || loading}
-            className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <button
-            onClick={() => setPage((current) => Math.min(pagination.totalPages || current + 1, current + 1))}
-            disabled={loading || page >= (pagination.totalPages || 1)}
-            className="rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 font-semibold text-[var(--text-primary)] disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
-      </div>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
