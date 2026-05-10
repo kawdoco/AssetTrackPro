@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import {
   AlertCircle,
   ArrowLeft,
@@ -22,6 +23,11 @@ import {
   type MapPoint,
 } from '@/services/branchService';
 import { loadGoogleMaps } from '@/services/googleMapsLoader';
+import type { Zone } from '@/services/zoneService';
+import { SetupWorkflowGuide } from './setup-workflow-guide';
+import type { AppDispatch } from '@/store';
+import { createGate as createGateThunk } from '@/store/slices/gateSlice';
+import { fetchZones as fetchZonesThunk } from '@/store/slices/zoneSlice';
 
 const DEFAULT_CENTER = { lat: 6.9271, lng: 79.8612 };
 const DEFAULT_ZOOM = 17;
@@ -105,6 +111,7 @@ type PlaceSuggestion = {
 export const BranchMapEditor: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const branchId = Number.parseInt(id || '', 10);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -123,8 +130,10 @@ export const BranchMapEditor: React.FC = () => {
   const gateCirclesRef = useRef<any[]>([]);
 
   const [branch, setBranch] = useState<Branch | null>(null);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [boundary, setBoundary] = useState<BranchBoundary | null>(null);
   const [gateMarkers, setGateMarkers] = useState<BranchGateMarker[]>([]);
+  const [gateZoneByMarkerId, setGateZoneByMarkerId] = useState<Record<string, number>>({});
   const [mapCenter, setMapCenter] = useState<MapPoint>(DEFAULT_CENTER);
   const [mapZoom, setMapZoom] = useState<number>(DEFAULT_ZOOM);
   const [selectedGateId, setSelectedGateId] = useState<string | null>(null);
@@ -209,7 +218,11 @@ export const BranchMapEditor: React.FC = () => {
       }
 
       try {
-        const [maps, response] = await Promise.all([loadGoogleMaps(), getBranchMap(branchId)]);
+        const [maps, response, zoneResponse] = await Promise.all([
+          loadGoogleMaps(),
+          getBranchMap(branchId),
+          dispatch(fetchZonesThunk({ page: 1, limit: 500 })).unwrap(),
+        ]);
 
         if (!active || !containerRef.current) {
           return;
@@ -227,6 +240,11 @@ export const BranchMapEditor: React.FC = () => {
         }));
 
         setBranch(branchData);
+        setZones(
+          Array.isArray(zoneResponse.data)
+            ? zoneResponse.data.filter((zone) => zone.building?.branch?.id === branchId)
+            : []
+        );
         setBoundary(normalizeBranchBoundaryPayload(branchData.boundary_points));
         setGateMarkers(nextGates);
         setMapCenter(nextCenter);
@@ -286,7 +304,7 @@ export const BranchMapEditor: React.FC = () => {
         }
       }
     };
-  }, [branchId]);
+  }, [branchId, dispatch]);
 
   // Autocomplete suggestions as the user types.
   useEffect(() => {
@@ -380,11 +398,15 @@ export const BranchMapEditor: React.FC = () => {
         };
 
         setGateMarkers((prev) => [...prev, nextGate]);
+        setGateZoneByMarkerId((prev) => ({
+          ...prev,
+          [nextGate.id]: zones[0]?.id || 0,
+        }));
         setSelectedGateId(nextGate.id);
         setMode('pan');
       }
     });
-  }, [circleRadiusMeters, defaultGateRadiusMeters, gateMarkers.length, mode, squareSizeMeters]);
+  }, [circleRadiusMeters, defaultGateRadiusMeters, gateMarkers.length, mode, squareSizeMeters, zones]);
 
   useEffect(() => {
     if (!mapRef.current || !window.google?.maps) {
@@ -782,11 +804,59 @@ export const BranchMapEditor: React.FC = () => {
 
     const nextGateMarkers = gateMarkers.filter((gate) => gate.id !== selectedGateId);
     setGateMarkers(nextGateMarkers);
+    setGateZoneByMarkerId((prev) => {
+      const next = { ...prev };
+      delete next[selectedGateId];
+      return next;
+    });
     setSelectedGateId(nextGateMarkers[0]?.id ?? null);
+  };
+
+  const handleCreateRealGate = async () => {
+    if (!selectedGate) {
+      return;
+    }
+
+    const zoneId = gateZoneByMarkerId[selectedGate.id] || zones[0]?.id || 0;
+    if (!zoneId) {
+      setError('Create or select a zone before creating a real gate.');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      setError('');
+      setSaveMessage('');
+
+      const response = await dispatch(createGateThunk({
+        zone_id: zoneId,
+        gate_name: selectedGate.name.trim() || 'Gate',
+        direction: selectedGate.type === 'ENTRY' || selectedGate.type === 'EXIT' ? selectedGate.type : 'BOTH',
+        latitude: selectedGate.lat,
+        longitude: selectedGate.lng,
+        radius_m: clampGateRadius(selectedGate.radius_m ?? DEFAULT_GATE_RADIUS),
+        reader_model: null,
+        is_active: true,
+      })).unwrap();
+
+      setSaveMessage(response.message || 'Gate created.');
+    } catch (gateError) {
+      setError(getErrorMessage(gateError));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <div className="space-y-6">
+      <SetupWorkflowGuide
+        activeStep="gates"
+        counts={{
+          zones: zones.length,
+          gates: gateMarkers.length,
+        }}
+      />
+
       <div className="flex items-center justify-between gap-4">
         <div>
           <button
@@ -800,7 +870,7 @@ export const BranchMapEditor: React.FC = () => {
             {branch?.name || 'Branch'} Map Editor
           </h2>
           <p className="text-sm text-[var(--text-muted)]">
-            Search a place, jump to your current location, draw branch boundaries, and define gate read areas.
+            Draw the branch boundary, place gate read areas, then create the real gate record by selecting its zone.
           </p>
         </div>
 
@@ -988,8 +1058,9 @@ export const BranchMapEditor: React.FC = () => {
             <div className="mt-3 space-y-2 text-sm text-[var(--text-muted)]">
               <p>Use `My Location` to jump to the device location or `Search` to find a branch area quickly.</p>
               <p>`Place Points` lets you create an irregular boundary, while `Square` and `Circle` create quick site shapes with one click.</p>
-              <p>Each gate shows its read radius (default 5m) so future RFID read coverage can be planned visually.</p>
-              <p>The current map center, zoom, branch boundary, and gate radii are all saved with the branch.</p>
+              <p>`Add Gate` places a visual marker. Select a zone and click `Create Gate Record` to make it available on the Gates & RFID Readers page.</p>
+              <p>Each gate shows its read radius (default 5m), so RFID read coverage can be planned before hardware binding.</p>
+              <p>The map center, zoom, branch boundary, and visual gate markers are saved with the branch.</p>
             </div>
           </div>
 
@@ -1026,6 +1097,32 @@ export const BranchMapEditor: React.FC = () => {
 
                 <div>
                   <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
+                    Zone
+                  </label>
+                  <select
+                    value={gateZoneByMarkerId[selectedGate.id] || zones[0]?.id || 0}
+                    onChange={(event) =>
+                      setGateZoneByMarkerId((prev) => ({
+                        ...prev,
+                        [selectedGate.id]: Number(event.target.value),
+                      }))
+                    }
+                    className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
+                  >
+                    <option value={0}>Select zone</option>
+                    {zones.map((zone) => (
+                      <option key={zone.id} value={zone.id}>
+                        {zone.zone_name} / {zone.building?.name || 'Building'}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    This is required for the operational gate record. Gates belong to zones, not directly to the branch.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[var(--text-muted)]">
                     Read Radius
                   </label>
                   <input
@@ -1056,6 +1153,14 @@ export const BranchMapEditor: React.FC = () => {
                 >
                   <Trash2 className="w-4 h-4" />
                   Remove Gate
+                </button>
+                <button
+                  onClick={() => void handleCreateRealGate()}
+                  disabled={saving || zones.length === 0}
+                  className="ml-2 inline-flex items-center gap-2 rounded-md bg-[var(--brand-600)] px-3 py-2 text-sm font-semibold text-white hover:bg-[var(--brand-700)] disabled:opacity-60"
+                >
+                  <Save className="w-4 h-4" />
+                  Create Gate Record
                 </button>
               </div>
             ) : (
