@@ -27,6 +27,7 @@ import {
   selectOrganizationsError,
   selectOrganizationsPagination,
 } from '../../store/slices/organizationSlice';
+import { SetupWorkflowGuide } from './setup-workflow-guide';
 
 interface OrganizationFormState {
   name: string;
@@ -151,14 +152,22 @@ export const OrganizationManagement = () => {
   return (
     <div className="flex h-full gap-4 relative">
       <div className="flex-1 flex flex-col gap-4">
+        <SetupWorkflowGuide
+          activeStep="organizations"
+          counts={{ organizations: organizations.length }}
+        />
+
         <div className="flex justify-between items-center gap-4 mb-1">
           <div>
             <h2 className="text-base font-semibold text-[var(--text-primary)]">Organizations</h2>
-            <p className="text-xs text-[var(--text-muted)]">Manage tenant-level access and portfolio counts</p>
+            <p className="text-xs text-[var(--text-muted)]">
+              Start here. One organization owns the branches, buildings, zones, gates, readers, employees, and assets below it.
+            </p>
           </div>
 
           <button
             onClick={() => openForm()}
+            title="Create the top-level company or tenant before adding branches."
             className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-sm font-semibold hover:bg-[var(--brand-700)] transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -412,6 +421,9 @@ export const OrganizationManagement = () => {
                     placeholder="Organization Name"
                     className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
                   />
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Example: the customer, company, or tenant that owns all sites.
+                  </p>
                 </div>
 
                 <div>
@@ -426,6 +438,9 @@ export const OrganizationManagement = () => {
                     placeholder="e.g. Logistics, Healthcare, IT"
                     className="w-full rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:ring-1 focus:ring-[var(--brand-600)]"
                   />
+                  <p className="mt-1 text-xs text-[var(--text-muted)]">
+                    Optional. This helps classify the account in reports and admin views.
+                  </p>
                 </div>
 
                 <div className="flex gap-3 pt-2">
@@ -491,4 +506,3 @@ export const OrganizationManagement = () => {
 };
 
 export default OrganizationManagement;
-

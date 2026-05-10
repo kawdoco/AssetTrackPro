@@ -5,6 +5,7 @@ import {
   normalizeBranchBoundaryPayload,
   type Branch,
 } from '@/services/branchService';
+import { getGates, type Gate } from '@/services/gateService';
 import { loadGoogleMaps } from '@/services/googleMapsLoader';
 
 const DEFAULT_CENTER = { lat: 6.9271, lng: 79.8612 };
@@ -22,6 +23,7 @@ export const BranchOverviewMap: React.FC = () => {
   const overlaysRef = useRef<OverlayEntry[]>([]);
 
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [systemGates, setSystemGates] = useState<Gate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -30,9 +32,10 @@ export const BranchOverviewMap: React.FC = () => {
 
     const bootstrap = async () => {
       try {
-        const [maps, response] = await Promise.all([
+        const [maps, response, gateResponse] = await Promise.all([
           loadGoogleMaps(),
           getBranches(1, 100, '', undefined, true),
+          getGates(),
         ]);
 
         if (!active || !containerRef.current) {
@@ -51,6 +54,7 @@ export const BranchOverviewMap: React.FC = () => {
         }
 
         setBranches(Array.isArray(response.data) ? response.data : []);
+        setSystemGates(Array.isArray(gateResponse.data) ? gateResponse.data : []);
       } catch (bootstrapError) {
         if (!active) {
           return;
@@ -260,13 +264,74 @@ export const BranchOverviewMap: React.FC = () => {
       });
     });
 
+    systemGates
+      .filter((gate) => typeof gate.latitude === 'number' && typeof gate.longitude === 'number')
+      .forEach((gate) => {
+        const position = { lat: gate.latitude as number, lng: gate.longitude as number };
+        const radius = gate.radius_m || 5;
+
+        const circle = new maps.Circle({
+          center: position,
+          radius,
+          strokeColor: '#059669',
+          strokeOpacity: 0.9,
+          strokeWeight: 1.5,
+          fillColor: '#34D399',
+          fillOpacity: 0.16,
+          map: mapRef.current,
+        });
+
+        const marker = new maps.Marker({
+          position,
+          map: mapRef.current,
+          title: gate.gate_name,
+          label: {
+            text: 'R',
+            color: '#FFFFFF',
+            fontWeight: '700',
+          },
+          icon: {
+            path: maps.SymbolPath.CIRCLE,
+            scale: 7,
+            fillColor: '#047857',
+            fillOpacity: 1,
+            strokeColor: '#FFFFFF',
+            strokeWeight: 1.5,
+          },
+        });
+
+        marker.addListener('click', () => {
+          infoWindowRef.current?.setContent(`
+            <div style="min-width:200px;padding:4px 0;">
+              <div style="font-weight:700;font-size:13px;margin-bottom:4px;">${gate.gate_name}</div>
+              <div style="font-size:12px;color:#475569;">System gate</div>
+              <div style="font-size:12px;color:#475569;">Zone: ${gate.zone?.zone_name || '-'}</div>
+              <div style="font-size:12px;color:#475569;">Direction: ${gate.direction}</div>
+              <div style="font-size:12px;color:#475569;">Linked readers: ${gate.reader_devices?.length || 0}</div>
+            </div>
+          `);
+          infoWindowRef.current?.open({
+            anchor: marker,
+            map: mapRef.current,
+          });
+        });
+
+        bounds.extend(position);
+        const circleBounds = circle.getBounds();
+        if (circleBounds) {
+          bounds.union(circleBounds);
+        }
+        overlaysRef.current.push({ branchId: gate.zone?.building?.branch?.id || 0, instance: circle });
+        overlaysRef.current.push({ branchId: gate.zone?.building?.branch?.id || 0, instance: marker });
+      });
+
     if (!bounds.isEmpty()) {
       mapRef.current.fitBounds(bounds, 60);
     } else {
       mapRef.current.setCenter(DEFAULT_CENTER);
       mapRef.current.setZoom(DEFAULT_ZOOM);
     }
-  }, [branches]);
+  }, [branches, systemGates]);
 
   if (error) {
     return (
@@ -291,7 +356,9 @@ export const BranchOverviewMap: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 rounded-md border border-[var(--surface-border)] bg-[var(--surface-1)] px-3 py-2">
           <MapPin className="w-4 h-4 text-[var(--brand-600)]" />
-          <span className="text-xs font-semibold text-[var(--text-primary)]">{branches.length} Branches</span>
+          <span className="text-xs font-semibold text-[var(--text-primary)]">
+            {branches.length} Branches / {systemGates.length} Gates
+          </span>
         </div>
       </div>
 
