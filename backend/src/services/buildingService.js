@@ -1,86 +1,81 @@
-import { prisma } from '../config/db.js';
-// Change this path to match where your PrismaClient is created in your project
+import axiosInstance from './axiosInstance';
 
-// GET ALL BUILDINGS  (with optional branch_id filter + search + pagination)
-export const getAllBuildings = async ({ branch_id, search, page, limit }) => {
-  const where = {
-    ...(branch_id && { branch_id }),
-    ...(search    && { name: { contains: search, mode: 'insensitive' } }),
+export interface Building {
+  id: number;
+  branch_id: number;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+  branch?: {
+    id: number;
+    name: string;
+    organization?: {
+      id: number;
+      name: string;
+    };
   };
+}
 
-  const skip = (page - 1) * limit;
-
-  const [buildings, total] = await Promise.all([
-    prisma.building.findMany({
-      where,
-      skip,
-      take    : limit,
-      orderBy : { created_at: 'desc' },
-      include : {
-        branch : { select: { id: true, name: true } },
-        zones  : { select: { id: true, name: true } },
-      },
-    }),
-    prisma.building.count({ where }),
-  ]);
-
-  return {
-    buildings,
-    pagination: {
-      currentPage  : page,
-      totalPages   : Math.ceil(total / limit),
-      totalItems   : total,
-      itemsPerPage : limit,
-    },
+export interface BuildingResponse {
+  success: boolean;
+  data?: Building | Building[];
+  message?: string;
+  pagination?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    totalPages?: number;
+    currentPage?: number;
+    totalItems?: number;
+    itemsPerPage?: number;
   };
-};
+}
 
-// GET ONE BUILDING BY ID
-export const getBuildingById = async (id) => {
-  return prisma.building.findUnique({
-    where   : { id },
-    include : {
-      branch : { select: { id: true, name: true } },
-      zones  : true,
-    },
-  });
-};
+export interface CreateBuildingData {
+  branch_id: number;
+  name: string;
+}
 
-// CREATE BUILDING
-// Schema: branch_id (Int, FK), name (String)
-// @@unique([branch_id, name]) → Prisma throws P2002 if duplicate
-// onDelete: Cascade on branch → Prisma throws P2003 if branch missing
-export const createBuilding = async ({ branch_id, name }) => {
-  return prisma.building.create({
-    data    : { branch_id, name },
-    include : {
-      branch : { select: { id: true, name: true } },
-    },
-  });
-};
+export type UpdateBuildingData = Partial<CreateBuildingData>;
 
-// UPDATE BUILDING
-export const updateBuilding = async (id, data) => {
-  return prisma.building.update({
-    where   : { id },
-    data,
-    include : {
-      branch : { select: { id: true, name: true } },
-      zones  : { select: { id: true, name: true } },
-    },
-  });
-};
+export const buildingService = {
+  async getBuildings(
+    page: number = 1,
+    limit: number = 10,
+    search: string = '',
+    branchId?: number
+  ): Promise<BuildingResponse> {
+    try {
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', limit.toString());
+      if (search) params.append('search', search);
+      if (branchId) params.append('branch_id', branchId.toString());
 
-// DELETE BUILDING
-// zones are automatically deleted because of onDelete: Cascade in schema
-export const deleteBuilding = async (id) => {
-  return prisma.building.delete({ where: { id } });
-};
+      const response = await axiosInstance.get<BuildingResponse>(`/buildings?${params.toString()}`);
+      return response.data;
+    } catch (error) {
+      throw error;
+    }
+  },
 
-// GET ALL ZONES OF A BUILDING
-export const getBuildingZones = async (buildingId) => {
-  return prisma.zone.findMany({
-    where   : { building_id: buildingId },
-    orderBy : { created_at: 'asc' },
-  });
+  async getBuildingById(id: number): Promise<BuildingResponse> {
+    const response = await axiosInstance.get<BuildingResponse>(`/buildings/${id}`);
+    return response.data;
+  },
+
+  async createBuilding(data: CreateBuildingData): Promise<BuildingResponse> {
+    const response = await axiosInstance.post<BuildingResponse>('/buildings', data);
+    return response.data;
+  },
+
+  async updateBuilding(id: number, data: UpdateBuildingData): Promise<BuildingResponse> {
+    const response = await axiosInstance.put<BuildingResponse>(`/buildings/${id}`, data);
+    return response.data;
+  },
+
+  async deleteBuilding(id: number): Promise<BuildingResponse> {
+    const response = await axiosInstance.delete<BuildingResponse>(`/buildings/${id}`);
+    return response.data;
+  },
 };
