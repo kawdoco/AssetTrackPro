@@ -1,7 +1,7 @@
 import React from 'react';
 import { Search, Bell, ChevronDown } from '@/icons/lucideMuiAdapter';
 import { motion } from 'motion/react';
-import type { TabId } from '../App';
+import type { TabId } from '../../utils/routes';
 
 interface TopBarProps {
   activeTab: TabId;
@@ -12,6 +12,7 @@ const tabLabel: Record<TabId, string> = {
   assets: 'Assets',
   employees: 'Employees',
   organizations: 'Organizations',
+  branches: 'Branches',
   alerts: 'Alerts',
   reports: 'Reports',
   settings: 'Settings',

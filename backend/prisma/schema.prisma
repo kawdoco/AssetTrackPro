@@ -38,6 +38,12 @@ model Branch {
   name               String
   city               String
   status             String   @default("ACTIVE") // ACTIVE, INACTIVE
+  map_center_lat     Float?
+  map_center_lng     Float?
+  map_zoom           Int      @default(17)
+  boundary_points    Json?
+  gate_markers       Json?
+  map_updated_at     DateTime?
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -121,6 +127,7 @@ model Employee {
   name               String
   email              String?
   status             String   @default("ACTIVE") // ACTIVE, RESIGNED, LEAVE
+  is_active          Boolean  @default(true)
   created_at         DateTime @default(now())
   updated_at         DateTime @updatedAt
 
@@ -129,6 +136,7 @@ model Employee {
   asset_assignments  AssetAssignment[]
 
   @@unique([organization_id, employee_code])
+  @@index([is_active])
   @@map("employee")
 }
 
@@ -225,6 +233,7 @@ model Alert {
   event_id           Int?     // Can be null for non-event-triggered alerts
   alert_type         String   // UNAUTHORIZED_EXIT, OVERDUE_RETURN, LOST_ASSET, ZONE_VIOLATION, TAMPERED_TAG
   severity           String   // CRITICAL, HIGH, MEDIUM, LOW
+  status             String   @default("Open") // Open, Acknowledged, Resolved
   message            String
   resolved_at        DateTime?
   resolution_notes   String?
@@ -237,6 +246,7 @@ model Alert {
 
   @@index([asset_id])
   @@index([severity])
+  @@index([status])
   @@index([resolved_at])
   @@index([alert_type])
   @@index([created_at])
