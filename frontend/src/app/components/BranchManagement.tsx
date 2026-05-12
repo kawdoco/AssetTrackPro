@@ -39,9 +39,11 @@ export const BranchManagement = () => {
   const [page, setPage] = useState(1);
   const [includeInactive, setIncludeInactive] = useState(false);
 
+
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | undefined>();
+
 
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -102,6 +104,7 @@ export const BranchManagement = () => {
         await dispatch(createBranch(data)).unwrap();
       }
 
+
       setShowForm(false);
       setEditingBranch(undefined);
     } catch (err) {
@@ -130,14 +133,8 @@ export const BranchManagement = () => {
 
   return (
     <div className="flex h-full gap-4 relative">
+      {/* ── Main column ── */}
       <div className="flex-1 flex flex-col gap-4">
-        <SetupWorkflowGuide
-          activeStep="branches"
-          counts={{
-            organizations: organizations.length,
-            branches: branches.length,
-          }}
-        />
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
@@ -314,6 +311,7 @@ export const BranchManagement = () => {
           </table>
         </div>
 
+        {/* ✅ Pagination — now correctly inside the flex-1 column */}
         <div className="flex items-center justify-between gap-3 text-xs text-[var(--text-muted)]">
           <span>
             Page {pagination.page} of {pagination.totalPages} · {pagination.total} branch(es)
@@ -335,7 +333,9 @@ export const BranchManagement = () => {
             </button>
           </div>
         </div>
+
       </div>
+      {/* ── End main column ── */}
 
       {/* Branch Form Modal */}
       <BranchForm

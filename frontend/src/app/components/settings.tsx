@@ -6,10 +6,11 @@ import {
   Building2,
   Save,
   Laptop,
-  Activity,
   Globe,
   GripVerticalIcon,
   Maximize,
+  Sun,
+  Moon,
 } from "@/icons/lucideMuiAdapter";
 import type { DensityMode, ThemeMode } from "../../hooks/useUiTheme";
 
@@ -75,6 +76,7 @@ export default function Settings({
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
         <div className="xl:col-span-2 space-y-4">
+          {/* User Profile */}
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <User className="w-4 h-4 text-[var(--text-muted)]" />
@@ -104,6 +106,7 @@ export default function Settings({
             </div>
           </div>
 
+          {/* Security */}
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Lock className="w-4 h-4 text-[var(--text-muted)]" />
@@ -143,6 +146,7 @@ export default function Settings({
             </div>
           </div>
 
+          {/* Notifications */}
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Bell className="w-4 h-4 text-[var(--text-muted)]" />
@@ -176,6 +180,7 @@ export default function Settings({
         </div>
 
         <div className="space-y-4">
+          {/* Theme Mode */}
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Globe className="w-4 h-4 text-[var(--text-muted)]" />
@@ -193,21 +198,23 @@ export default function Settings({
                 active={themeMode === "light"}
                 onClick={() => setThemeMode("light")}
                 label="Light"
-                icon={<Globe className="w-4 h-4" />}
+                icon={<Sun className="w-4 h-4" />}
               />
               <SegmentButton
                 active={themeMode === "dark"}
                 onClick={() => setThemeMode("dark")}
                 label="Dark"
-                icon={<Activity className="w-4 h-4" />}
+                icon={<Moon className="w-4 h-4" />}
               />
             </div>
 
             <p className="text-xs text-[var(--text-muted)]">
-              Active theme: <span className="font-medium text-[var(--text-secondary)]">{resolvedTheme}</span>
+              Active theme:{" "}
+              <span className="font-medium text-[var(--text-secondary)]">{resolvedTheme}</span>
             </p>
           </div>
 
+          {/* Density */}
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <GripVerticalIcon className="w-4 h-4 text-[var(--text-muted)]" />
@@ -230,6 +237,7 @@ export default function Settings({
             </div>
           </div>
 
+          {/* Organization */}
           <div className={cardClass}>
             <div className="flex items-center gap-2 mb-1">
               <Building2 className="w-4 h-4 text-[var(--text-muted)]" />
