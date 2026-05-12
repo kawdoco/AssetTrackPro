@@ -27,6 +27,7 @@ export const MainLayout: React.FC = () => {
     if (pathname.startsWith("/employees")) return "employees";
     if (pathname.startsWith("/organizations")) return "organizations";
     if (pathname.startsWith("/branches")) return "branches";
+    if (pathname.startsWith("/zones")) return "zones";
     if (pathname.startsWith("/alerts")) return "alerts";
     if (pathname.startsWith("/reports")) return "reports";
     return "settings";
