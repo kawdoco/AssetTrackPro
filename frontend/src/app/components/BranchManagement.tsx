@@ -19,7 +19,6 @@ import {
 import * as organizationAPI from '@/services/organizationService';
 import type { Branch } from '../../services/branchService';
 import { BranchForm } from './branch-form';
-import { SetupWorkflowGuide } from './setup-workflow-guide';
 
 interface Organization {
   id: number;
@@ -39,11 +38,9 @@ export const BranchManagement = () => {
   const [page, setPage] = useState(1);
   const [includeInactive, setIncludeInactive] = useState(false);
 
-
   // Form states
   const [showForm, setShowForm] = useState(false);
   const [editingBranch, setEditingBranch] = useState<Branch | undefined>();
-
 
   // Delete confirmation
   const [deleteConfirm, setDeleteConfirm] = useState<number | null>(null);
@@ -104,7 +101,6 @@ export const BranchManagement = () => {
         await dispatch(createBranch(data)).unwrap();
       }
 
-
       setShowForm(false);
       setEditingBranch(undefined);
     } catch (err) {
@@ -138,15 +134,9 @@ export const BranchManagement = () => {
 
         {/* Header */}
         <div className="flex justify-between items-center mb-1">
-          <div>
-            <h2 className="text-base font-semibold text-[var(--text-primary)]">Branches</h2>
-            <p className="text-xs text-[var(--text-muted)]">
-              Create each physical site under an organization before adding buildings or drawing the branch map.
-            </p>
-          </div>
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Branches</h2>
           <button
             onClick={() => handleOpenForm()}
-            title="Add a physical site or campus under an existing organization."
             className="flex items-center gap-2 px-3 py-2 bg-[var(--brand-600)] text-white rounded-md text-sm font-semibold hover:bg-[var(--brand-700)] transition-all"
           >
             <Plus className="w-4 h-4" />
@@ -171,10 +161,11 @@ export const BranchManagement = () => {
               setPage(1);
               setIncludeInactive((current) => !current);
             }}
-            className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${includeInactive
-              ? 'bg-[var(--brand-600)] text-white'
-              : 'bg-[var(--surface-1)] border border-[var(--surface-border)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
-              }`}
+            className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              includeInactive
+                ? 'bg-[var(--brand-600)] text-white'
+                : 'bg-[var(--surface-1)] border border-[var(--surface-border)] text-[var(--text-primary)] hover:bg-[var(--surface-2)]'
+            }`}
           >
             {includeInactive ? 'Hide Inactive' : 'Show Inactive'}
           </button>
@@ -243,10 +234,11 @@ export const BranchManagement = () => {
                     </td>
 
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${branch.status === 'ACTIVE'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-600'
-                        }`}>
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                        branch.status === 'ACTIVE'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-gray-100 text-gray-600'
+                      }`}>
                         {branch.status === 'ACTIVE' ? 'Active' : 'Inactive'}
                       </span>
                     </td>
@@ -261,7 +253,7 @@ export const BranchManagement = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => navigate(`/branches/${branch.id}/map`)}
-                          title="Open the Map Editor to draw branch boundaries and place gate markers."
+                          title="Edit Map"
                           className="rounded-md border border-[var(--surface-border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all"
                         >
                           Map
